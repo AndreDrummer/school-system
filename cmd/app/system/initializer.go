@@ -1,13 +1,13 @@
-package student_system_initializer
+package system
 
 import (
 	"fmt"
 	"log"
 	"os"
-	"school-system/cmd/Utils/file_handler"
-	"school-system/cmd/structs"
-	panel "school-system/cmd/system"
-	"school-system/cmd/system/controller"
+	"school-system/cmd/app/Utils/file_handler"
+	"school-system/cmd/app/controller"
+	"school-system/cmd/app/models"
+
 	"strconv"
 	"strings"
 )
@@ -62,7 +62,7 @@ func loadStudentsFromDB() {
 				log.Fatal(err)
 			}
 
-			newStudent := &structs.Student{
+			newStudent := &models.Student{
 				ID:     studentID,
 				Grades: convertGradesToInt(grades),
 				Name:   studentName,
@@ -107,5 +107,5 @@ func Initialize() {
 	initDB()
 	loadStudentsFromDB()
 
-	panel.Start(systemInstance)
+	Start(systemInstance)
 }

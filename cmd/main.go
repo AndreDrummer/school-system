@@ -1,9 +1,7 @@
 package main
 
-import (
-	student_system_initializer "school-system/cmd/system/initializer"
-)
+import "school-system/cmd/app/system"
 
 func main() {
-	student_system_initializer.Initialize()
+	system.Initialize()
 }

@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	utils "school-system/cmd/Utils"
+	utils "school-system/cmd/app/Utils"
+
 	"strings"
 )
 

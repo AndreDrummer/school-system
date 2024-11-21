@@ -4,26 +4,27 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	utils "school-system/cmd/Utils"
-	"school-system/cmd/Utils/file_handler"
-	"school-system/cmd/structs"
+	utils "school-system/cmd/app/Utils"
+	"school-system/cmd/app/Utils/file_handler"
+	"school-system/cmd/app/models"
+
 	"sort"
 	"strconv"
 	"strings"
 )
 
 var inputRead *bufio.Reader = bufio.NewReader(os.Stdin)
-var DBFilename = "cmd/system/db/students.txt"
+var DBFilename = "cmd/app/db/students.txt"
 
 type System struct {
-	Students            map[int]*structs.Student
+	Students            map[int]*models.Student
 	StudentsQty         int
 	MinimumPassingGrade int
 }
 
 func NewSystem() *System {
 	return &System{
-		Students:            make(map[int]*structs.Student),
+		Students:            make(map[int]*models.Student),
 		StudentsQty:         0,
 		MinimumPassingGrade: 60,
 	}
@@ -171,7 +172,7 @@ func removeStudentFromDB(studentID int) {
 	}
 }
 
-func getStudentByID(system *System, studentID int) (*structs.Student, bool) {
+func getStudentByID(system *System, studentID int) (*models.Student, bool) {
 	student, exists := system.Students[studentID]
 	return student, exists
 }
@@ -218,7 +219,7 @@ func (system *System) AddStudent() {
 
 	studentID := getNextAvailableID(system)
 
-	newStudent := &structs.Student{
+	newStudent := &models.Student{
 		ID:     studentID,
 		Grades: make([]int, 0),
 		Name:   studentName,
@@ -368,7 +369,7 @@ func (system *System) DisplayAll(params *displayAllParams) {
 func (system *System) ClearDB() {
 	answer := readYesOrNo("This will delete all data save in the database. Are you sure? ")
 	if answer {
-		system.Students = make(map[int]*structs.Student)
+		system.Students = make(map[int]*models.Student)
 		DBFile := file_handler.OpenFileWithPerm(DBFilename, os.O_TRUNC)
 		defer DBFile.Close()
 

@@ -1,15 +1,12 @@
-package panel
+package system
 
 import (
 	"fmt"
 	"os"
-	utils "school-system/cmd/Utils"
-	"school-system/cmd/system/controller"
-	"time"
-)
+	utils "school-system/cmd/app/Utils"
+	"school-system/cmd/app/controller"
 
-var (
-	systemInstance *controller.System
+	"time"
 )
 
 func Start(system *controller.System) {
