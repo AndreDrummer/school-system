@@ -1,9 +1,7 @@
 
 # School System
 
-### `1` GO Practice Challenge: Student Management System
-
-You are tasked with creating a simple Student Management System using Go. The program will allow users to add students, remove students, and display a list of students, including their grades, average scores, and whether they passed or failed based on a minimum average.
+Creating a simple Student Management System using Go. The program will allow users to add students, remove students, and display a list of students, including their grades, average scores, and whether they passed or failed based on a minimum average.
 
 ### **Requirements:**
 
