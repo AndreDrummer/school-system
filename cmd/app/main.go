@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"school-system/cmd/app/controller"
@@ -6,7 +6,7 @@ import (
 	"school-system/cmd/app/view"
 )
 
-func Run() {
+func main() {
 	db.Init()
 	controller.LoadStudentsFromDB()
 	view.Run()
