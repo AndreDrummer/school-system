@@ -1,7 +1,7 @@
 package main
 
-import "school-system/cmd/app/system"
+import "school-system/cmd/app"
 
 func main() {
-	system.Initialize()
+	app.Run()
 }
