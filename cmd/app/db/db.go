@@ -13,33 +13,6 @@ import (
 
 var dbFilename = "cmd/app/db/students.txt"
 
-func convertStructToString(s interface{}) string {
-	structValue := reflect.ValueOf(s)
-	structType := reflect.TypeOf(s)
-
-	var builder strings.Builder
-
-	for i := 0; i < structType.NumField(); i++ {
-		value := structValue.Field(i)
-		if value.CanInt() || value.CanConvert(reflect.TypeOf(string(""))) {
-			builder.WriteString(fmt.Sprintf("%v ", value))
-		}
-	}
-
-	return builder.String()
-}
-
-func createDBFile(filename string) error {
-	_, err := os.OpenFile(filename, os.O_CREATE, 0644)
-
-	if err != nil {
-		slog.Error(fmt.Sprintf("creating file %v\n", filename))
-		return err
-	}
-
-	return nil
-}
-
 // Fake DB: All is based on files
 func Init() {
 	_, errorReadingFile := os.Open(dbFilename)
@@ -72,6 +45,8 @@ func Update(id int, data interface{}) bool {
 	if dbFile != nil {
 		defer dbFile.Close()
 		dataString := convertStructToString(data)
+		fmt.Println(data)
+		fmt.Println(dataString)
 		file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
 
 		return true
@@ -131,4 +106,43 @@ func Clear() bool {
 	} else {
 		return false
 	}
+}
+
+func convertStructToString(s interface{}) string {
+	structValue := reflect.ValueOf(s)
+	structType := reflect.TypeOf(s)
+
+	var builder strings.Builder
+
+	for i := 0; i < structType.NumField(); i++ {
+		value := structValue.Field(i)
+		if value.CanInt() || value.CanConvert(reflect.TypeOf(string(""))) {
+			builder.WriteString(fmt.Sprintf("%v ", value))
+		}
+
+		if value.CanConvert(reflect.TypeOf([]int{})) {
+			println("PODE")
+			convertedValue := value.Convert(reflect.TypeOf([]int{}))
+			result, ok := convertedValue.Interface().([]int)
+
+			if ok {
+				for _, v := range result {
+					builder.WriteString(fmt.Sprintf("%v ", strconv.Itoa(v)))
+				}
+			}
+		}
+	}
+
+	return builder.String()
+}
+
+func createDBFile(filename string) error {
+	_, err := os.OpenFile(filename, os.O_CREATE, 0644)
+
+	if err != nil {
+		slog.Error(fmt.Sprintf("creating file %v\n", filename))
+		return err
+	}
+
+	return nil
 }

@@ -3,13 +3,16 @@ package controller
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
 	utils "school-system/cmd/app/Utils"
+	"school-system/cmd/app/db"
+	dbutils "school-system/cmd/app/db/utils"
 	"school-system/cmd/app/models"
+	"strconv"
 
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -174,6 +177,43 @@ func DisplayAll(params *displayAllParams) {
 	}
 }
 
+func Clear() {
+	answer := readYesOrNo("This will delete all data save in the database. Are you sure? ")
+	if answer && SystemInstance.ClearAll() {
+		utils.SetSuccessMsg("\n** Operação realizada com sucesso! **")
+	} else {
+		slog.Error("** Operação não realizada! **")
+	}
+}
+
+func LoadStudentsFromDB() {
+	content := db.GetAll()
+
+	if len(content) > 0 {
+		for _, v := range content {
+			studentIDString := strings.Split(v, " ")[0]
+			studentID, err := strconv.Atoi(studentIDString)
+			if v == "" {
+				continue
+			}
+			studentName, grades := dbutils.GetStudentNameAndGrades(v)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			newStudent := &models.Student{
+				ID:     studentID,
+				Grades: dbutils.ConvertGradesToInt(grades),
+				Name:   studentName,
+			}
+
+			SystemInstance.StudentsQty++
+			SystemInstance.Students[studentID] = newStudent
+		}
+	}
+}
+
 type displayAllParams struct {
 	displayMsg string
 	readInput  interface{}
@@ -251,31 +291,6 @@ func readYesOrNo(msg string) bool {
 	return false
 }
 
-func GetStudentNameAndGrades(studentInfo string) (string, string) {
-
-	parts := strings.Fields(studentInfo)
-	var gradeStartIndex int
-
-	for i := 0; i < len(parts); i++ {
-		if _, err := strconv.Atoi(parts[i]); err == nil {
-			gradeStartIndex = i
-			break
-		}
-	}
-
-	var studentName, grades string
-
-	if gradeStartIndex > 0 {
-		studentName = strings.Join(parts[1:gradeStartIndex], " ")
-		grades = strings.Join(parts[gradeStartIndex:], " ")
-	} else {
-		studentName = strings.Join(parts[1:], " ")
-		grades = ""
-	}
-
-	return studentName, grades
-}
-
 func getStudentByID(studentID int) (*models.Student, bool) {
 	student, exists := SystemInstance.Students[studentID]
 	return student, exists
@@ -302,13 +317,4 @@ func getNextAvailableID() int {
 	}
 
 	return len(studentIDs) + 1
-}
-
-func Clear() {
-	answer := readYesOrNo("This will delete all data save in the database. Are you sure? ")
-	if answer && SystemInstance.ClearAll() {
-		utils.SetSuccessMsg("\n** Operação realizada com sucesso! **")
-	} else {
-		slog.Error("** Operação não realizada! **")
-	}
 }

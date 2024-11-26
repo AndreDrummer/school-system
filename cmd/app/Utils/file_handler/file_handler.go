@@ -80,7 +80,8 @@ func RemoveFileEntry(file *os.File, entryPrefix any) {
 	var newContent []string
 
 	for _, v := range fileContent {
-		if strings.HasPrefix(v, fmt.Sprintf("%d.", entryPrefix)) || v == "" {
+		vPrefix := strings.Split(v, " ")[0]
+		if vPrefix == entryPrefix || v == "" {
 			continue
 		} else {
 			newContent = append(newContent, v)
