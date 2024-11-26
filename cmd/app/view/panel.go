@@ -1,4 +1,4 @@
-package system
+package view
 
 import (
 	"fmt"
@@ -9,9 +9,8 @@ import (
 	"time"
 )
 
-func Start(system *controller.System) {
+func Run() {
 	utils.ClearConsole()
-	systemInstance = system
 
 	fmt.Print("Welcome to the Student Management System!\n")
 
@@ -23,7 +22,7 @@ func Start(system *controller.System) {
 		fmt.Println("4 - Calculate average score of a Student")
 		fmt.Println("5 - Check if a student passed or failed")
 		fmt.Println("6 - Display all students and their grades")
-		fmt.Println("7 - Clear DB")
+		fmt.Println("7 - Apagar tudo")
 		fmt.Println("0 - Exit")
 		fmt.Print("\nEnter your choice: ")
 
@@ -35,25 +34,26 @@ func Start(system *controller.System) {
 
 func handleChoice(choice int) {
 	utils.ClearConsole()
+
 	switch choice {
 	case 0:
 		fmt.Printf("\n\n ** Goodbye! **\n\n")
 		time.Sleep(750 * time.Millisecond)
 		os.Exit(0)
 	case 1:
-		systemInstance.AddStudent()
+		controller.AddStudent()
 	case 2:
-		systemInstance.AddGrade()
+		controller.AddGrade()
 	case 3:
-		systemInstance.RemoveStudent()
+		controller.RemoveStudent()
 	case 4:
-		systemInstance.CalculateAverage()
+		controller.CalculateAverage()
 	case 5:
-		systemInstance.CheckPassOrFail()
+		controller.CheckPassOrFail()
 	case 6:
-		systemInstance.DisplayAll(nil)
+		controller.DisplayAll(nil)
 	case 7:
-		systemInstance.ClearDB()
+		controller.Clear()
 	default:
 		fmt.Println("Invalid choice. Try again.")
 	}

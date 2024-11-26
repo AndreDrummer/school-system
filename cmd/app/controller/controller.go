@@ -3,9 +3,9 @@ package controller
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"os"
 	utils "school-system/cmd/app/Utils"
-	"school-system/cmd/app/Utils/file_handler"
 	"school-system/cmd/app/models"
 
 	"sort"
@@ -14,19 +14,163 @@ import (
 )
 
 var inputRead *bufio.Reader = bufio.NewReader(os.Stdin)
-var DBFilename = "cmd/app/db/students.txt"
 
-type System struct {
-	Students            map[int]*models.Student
-	StudentsQty         int
-	MinimumPassingGrade int
+var SystemInstance = &models.System{
+	Students:            make(map[int]*models.Student),
+	StudentsQty:         0,
+	MinimumPassingGrade: 60,
 }
 
-func NewSystem() *System {
-	return &System{
-		Students:            make(map[int]*models.Student),
-		StudentsQty:         0,
-		MinimumPassingGrade: 60,
+func AddStudent() {
+	fmt.Print("\nEnter student name: ")
+
+	studentName, _ := inputRead.ReadString('\n')
+	studentName = strings.TrimSpace(studentName)
+	nameIsEmpty := studentName == ""
+
+	if nameIsEmpty {
+		utils.ClearConsole()
+
+		fmt.Println(" ** Invalid name **, please try again.")
+		for nameIsEmpty {
+			fmt.Print("\nEnter student name: ")
+			studentName, _ = inputRead.ReadString('\n')
+			studentName = strings.TrimSpace(studentName)
+			nameIsEmpty = studentName == ""
+		}
+	}
+
+	newStudent := &models.Student{
+		ID:     getNextAvailableID(),
+		Grades: make([]int, 0),
+		Name:   studentName,
+	}
+
+	if SystemInstance.AddStudent(newStudent) {
+		utils.ClearConsole()
+		utils.SetSuccessMsg(fmt.Sprintf("Student %v Added!", newStudent.Name))
+	}
+
+}
+
+func AddGrade() {
+	if areThereStudentsRegistered() {
+		fmt.Print("What student would you like to add a grade?\n\n")
+		studentID := readStudentID()
+		student, studentExists := getStudentByID(studentID)
+
+		if studentExists {
+			grade := readGrade()
+
+			if grade >= 0 {
+				if SystemInstance.AddGrade(studentID, grade) {
+					utils.SetSuccessMsg(fmt.Sprintf("Grade %v added to %v!", grade, student.Name))
+				}
+			} else {
+				utils.ClearConsole()
+			}
+		}
+	} else {
+		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+	}
+}
+
+func RemoveStudent() {
+	if areThereStudentsRegistered() {
+		studentID := readStudentID()
+		student, studentExists := getStudentByID(studentID)
+
+		if studentExists && SystemInstance.RemoveStudent(studentID) {
+			utils.SetSuccessMsg(fmt.Sprintf("Student %v removed!", student.Name))
+		}
+	} else {
+		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+	}
+}
+
+func CalculateAverage() {
+	if areThereStudentsRegistered() {
+		studentID := readStudentID()
+		avg, err := SystemInstance.CalculateAverage(studentID)
+
+		if err != nil {
+			slog.Error(err.Error())
+		} else {
+			student := SystemInstance.Students[studentID]
+			utils.PressEnterToGoBack(fmt.Sprintf("\nThe average of %s is %v.\n", student.Name, avg))
+		}
+	} else {
+		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+	}
+}
+
+func CheckPassOrFail() {
+	if areThereStudentsRegistered() {
+		studentID := readStudentID()
+
+		approved := SystemInstance.CheckPassOrFail(studentID)
+		var resultMsg string
+
+		if approved {
+			resultMsg = "has been approved! :)"
+
+		} else {
+			resultMsg = "has failed :(!"
+		}
+
+		student := SystemInstance.Students[studentID]
+		utils.PressEnterToGoBack(fmt.Sprintf("\n%s %v.\n", student.Name, resultMsg))
+
+	} else {
+		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+	}
+}
+
+func DisplayAll(params *displayAllParams) {
+	var msg string
+
+	if params == nil {
+		params = &displayAllParams{}
+	}
+
+	if params.displayMsg == "" {
+		msg = "\n\nPress Enter to go back. "
+	} else {
+
+		msg = params.displayMsg
+	}
+
+	if areThereStudentsRegistered() {
+		tempSliceToSort := make([]string, 0)
+		students := SystemInstance.Students
+
+		for _, v := range students {
+			var line string
+			if len(v.Grades) == 0 {
+				line = fmt.Sprintf("%d - %s -- No grades recorded.", v.ID, v.Name)
+				tempSliceToSort = append(tempSliceToSort, line)
+			} else {
+				line = fmt.Sprintf("%d - %s --Grades-> %v", v.ID, v.Name, v.Grades)
+				tempSliceToSort = append(tempSliceToSort, line)
+			}
+
+		}
+		utils.SortSliceStringByID(tempSliceToSort, "-")
+
+		for _, v := range tempSliceToSort {
+			fmt.Println(v)
+		}
+
+		if params.readInput != nil {
+			fmt.Print(msg)
+			fmt.Scanln(params.readInput)
+			utils.ClearConsole()
+		} else {
+			utils.PressEnterToGoBack("")
+		}
+
+	} else {
+		utils.PressEnterToGoBack("\n** Empty! No student registered.")
 	}
 }
 
@@ -35,19 +179,19 @@ type displayAllParams struct {
 	readInput  interface{}
 }
 
-func areThereStudentsRegistered(system *System) bool {
-	return len(system.Students) > 0
+func areThereStudentsRegistered() bool {
+	return len(SystemInstance.Students) > 0
 }
 
-func readStudentID(system *System) int {
+func readStudentID() int {
 	var studentID int
 
 	for {
-		system.DisplayAll(&displayAllParams{
+		DisplayAll(&displayAllParams{
 			displayMsg: "\nEnter the student ID: ",
 			readInput:  &studentID,
 		})
-		_, exists := getStudentByID(system, studentID)
+		_, exists := getStudentByID(studentID)
 
 		if exists {
 			break
@@ -67,7 +211,6 @@ func readGrade() int {
 	_, err := fmt.Scanf("%d", &grade)
 
 	for err != nil || grade < 0 || grade > 100 {
-		utils.ClearConsole()
 		fmt.Print("Invalid grade. Enter a number between 0 and 100: ")
 		_, err = fmt.Scanf("%d", &grade)
 	}
@@ -133,54 +276,16 @@ func GetStudentNameAndGrades(studentInfo string) (string, string) {
 	return studentName, grades
 }
 
-func updateGradeOnDB(studentID int, gradePosition int, newGrade string) {
-	dbFile := file_handler.OpenFileWithPerm(DBFilename, os.O_RDWR)
-
-	if dbFile != nil {
-		defer dbFile.Close()
-		studentData := file_handler.GetFileEntryByPrefix(studentID, dbFile)
-		studentName, grades := GetStudentNameAndGrades(studentData)
-		updatedGrades := make([]string, 0)
-		gradeSlice := strings.Fields(grades)
-
-		if gradePosition < len(gradeSlice) {
-			gradeSlice[gradePosition] = newGrade
-		}
-
-		updatedGrades = append(updatedGrades, gradeSlice...)
-		updatedGrades = append(updatedGrades, newGrade)
-
-		updatedGradesString := strings.Join(updatedGrades, " ")
-
-		var buidler strings.Builder
-		buidler.WriteString(fmt.Sprintf("%v. ", studentID))
-		buidler.WriteString(studentName)
-		buidler.WriteString(" ")
-		buidler.WriteString(updatedGradesString)
-		studentInfo := buidler.String()
-
-		file_handler.UpdateFileEntry(dbFile, studentID, studentInfo)
-	}
-}
-
-func removeStudentFromDB(studentID int) {
-	dbFile := file_handler.OpenFileWithPerm(DBFilename, os.O_RDWR)
-
-	if dbFile != nil {
-		defer dbFile.Close()
-		file_handler.RemoveFileEntry(dbFile, studentID)
-	}
-}
-
-func getStudentByID(system *System, studentID int) (*models.Student, bool) {
-	student, exists := system.Students[studentID]
+func getStudentByID(studentID int) (*models.Student, bool) {
+	student, exists := SystemInstance.Students[studentID]
 	return student, exists
 }
 
-func getNextAvailableID(system *System) int {
+func getNextAvailableID() int {
 	studentIDs := make([]int, 0)
+	students := SystemInstance.Students
 
-	for _, student := range system.Students {
+	for _, student := range students {
 		studentID := student.ID
 		studentIDs = append(studentIDs, studentID)
 	}
@@ -199,181 +304,11 @@ func getNextAvailableID(system *System) int {
 	return len(studentIDs) + 1
 }
 
-func (system *System) AddStudent() {
-	fmt.Print("\nEnter student name: ")
-	studentName, _ := inputRead.ReadString('\n')
-	studentName = strings.TrimSpace(studentName)
-	nameIsEmpty := studentName == ""
-
-	if nameIsEmpty {
-		utils.ClearConsole()
-
-		fmt.Println(" ** Invalid name **, please try again.")
-		for nameIsEmpty {
-			fmt.Print("\nEnter student name: ")
-			studentName, _ = inputRead.ReadString('\n')
-			studentName = strings.TrimSpace(studentName)
-			nameIsEmpty = studentName == ""
-		}
-	}
-
-	studentID := getNextAvailableID(system)
-
-	newStudent := &models.Student{
-		ID:     studentID,
-		Grades: make([]int, 0),
-		Name:   studentName,
-	}
-
-	system.Students[newStudent.ID] = newStudent
-	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("%d. ", newStudent.ID))
-	builder.WriteString(fmt.Sprintf("%s ", newStudent.Name))
-
-	dbFile := file_handler.OpenFileWithPerm(DBFilename, os.O_APPEND|os.O_WRONLY)
-
-	if dbFile != nil {
-		defer dbFile.Close()
-		file_handler.AppendToFile(dbFile, builder.String())
-	}
-
-	utils.ClearConsole()
-	utils.SetSuccessMsg(fmt.Sprintf("Student %v Added!", studentName))
-	system.StudentsQty++
-}
-
-func (system *System) AddGrade() {
-	if areThereStudentsRegistered(system) {
-		fmt.Print("What student would you like to add a grade?\n\n")
-		studentID := readStudentID(system)
-		student, studentExists := getStudentByID(system, studentID)
-
-		if studentExists {
-			grade := readGrade()
-
-			if grade >= 0 {
-				student.AddGrade(grade)
-
-				gradeString := fmt.Sprintf("%d", grade)
-
-				studentGradesQty := len(student.Grades)
-				updateGradeOnDB(studentID, studentGradesQty, gradeString)
-
-				utils.SetSuccessMsg(fmt.Sprintf("Grade %v added to %v!", grade, student.Name))
-			} else {
-				utils.ClearConsole()
-			}
-		}
-	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
-	}
-}
-
-func (system *System) RemoveStudent() {
-	if areThereStudentsRegistered(system) {
-		studentID := readStudentID(system)
-		student, studentExists := getStudentByID(system, studentID)
-
-		if studentExists {
-			delete(system.Students, studentID)
-			removeStudentFromDB(studentID)
-			utils.SetSuccessMsg(fmt.Sprintf("Student %v removed!", student.Name))
-		}
-	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
-	}
-}
-
-func (system *System) CalculateAverage() {
-	if areThereStudentsRegistered(system) {
-		studentID := readStudentID(system)
-		student, studentExists := getStudentByID(system, studentID)
-
-		if studentExists {
-			avg := student.GetAverage()
-			utils.PressEnterToGoBack(fmt.Sprintf("\nThe average of %s is %v.\n", student.Name, avg))
-		}
-	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
-	}
-}
-
-func (system *System) CheckPassOrFail() {
-	if areThereStudentsRegistered(system) {
-		studentID := readStudentID(system)
-		student, studentExists := getStudentByID(system, studentID)
-
-		if studentExists {
-			passed := student.GetAverage() >= system.MinimumPassingGrade
-			var resultMsg string
-			if passed {
-				resultMsg = "has been approved! :)"
-			} else {
-				resultMsg = "has failed :(!"
-			}
-			utils.PressEnterToGoBack(fmt.Sprintf("\n%s %v.\n", student.Name, resultMsg))
-		}
-
-	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
-	}
-}
-
-func (system *System) DisplayAll(params *displayAllParams) {
-	var msg string
-
-	if params == nil {
-		params = &displayAllParams{}
-	}
-
-	if params.displayMsg == "" {
-		msg = "\n\nPress Enter to go back. "
-	} else {
-
-		msg = params.displayMsg
-	}
-
-	if areThereStudentsRegistered(system) {
-		tempSliceToSort := make([]string, 0)
-
-		for _, v := range system.Students {
-			var line string
-			if len(v.Grades) == 0 {
-				line = fmt.Sprintf("%d - %s -- No grades recorded.", v.ID, v.Name)
-				tempSliceToSort = append(tempSliceToSort, line)
-			} else {
-				line = fmt.Sprintf("%d - %s --Grades-> %v", v.ID, v.Name, v.Grades)
-				tempSliceToSort = append(tempSliceToSort, line)
-			}
-
-		}
-		utils.SortSliceStringByID(tempSliceToSort, "-")
-
-		for _, v := range tempSliceToSort {
-			fmt.Println(v)
-		}
-
-		if params.readInput != nil {
-			fmt.Print(msg)
-			fmt.Scanln(params.readInput)
-			utils.ClearConsole()
-		} else {
-			utils.PressEnterToGoBack("")
-		}
-
-	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
-	}
-}
-
-func (system *System) ClearDB() {
+func Clear() {
 	answer := readYesOrNo("This will delete all data save in the database. Are you sure? ")
-	if answer {
-		system.Students = make(map[int]*models.Student)
-		DBFile := file_handler.OpenFileWithPerm(DBFilename, os.O_TRUNC)
-		defer DBFile.Close()
-
-		file_handler.ClearFileContent(DBFile)
+	if answer && SystemInstance.ClearAll() {
 		utils.SetSuccessMsg("\n** Operação realizada com sucesso! **")
+	} else {
+		slog.Error("** Operação não realizada! **")
 	}
 }

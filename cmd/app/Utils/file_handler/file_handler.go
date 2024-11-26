@@ -3,6 +3,7 @@ package file_handler
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	utils "school-system/cmd/app/Utils"
 
@@ -13,7 +14,7 @@ func OpenFileWithPerm(filename string, flag int) *os.File {
 	file, err := os.OpenFile(filename, flag, 0644)
 
 	if err != nil {
-		fmt.Printf("ERROR %v opening file %v", err, filename)
+		log.Fatalf("ERROR %v opening file %v", err, filename)
 		return nil
 	}
 
@@ -42,11 +43,12 @@ func GetFileContent(file *os.File) []string {
 	return content
 }
 
-func GetFileEntryByPrefix(prefix any, file *os.File) string {
+func GetFileEntryByPrefix(file *os.File, prefix string) string {
 	fileContent := GetFileContent(file)
 
 	for _, v := range fileContent {
-		if strings.HasPrefix(v, fmt.Sprintf("%v.", prefix)) {
+		vPrefix := strings.Split(v, " ")[0]
+		if vPrefix == prefix {
 			return v
 		}
 	}
@@ -54,12 +56,14 @@ func GetFileEntryByPrefix(prefix any, file *os.File) string {
 	return ""
 }
 
-func UpdateFileEntry(file *os.File, entryPrefix any, updatedEntry string) {
+func UpdateFileEntry(file *os.File, entryPrefix, updatedEntry string) {
 	fileContent := GetFileContent(file)
 	var newContent []string
 
 	for _, v := range fileContent {
-		if strings.HasPrefix(v, fmt.Sprintf("%d.", entryPrefix)) {
+
+		vPrefix := strings.Split(v, " ")[0]
+		if vPrefix == entryPrefix {
 			newContent = append(newContent, updatedEntry)
 		} else if v == "" {
 			continue
@@ -91,7 +95,7 @@ func OverrideFileContent(file *os.File, content []string) {
 
 	file.Seek(0, 0)
 
-	utils.SortSliceStringByID(content, ".")
+	utils.SortSliceStringByID(content, " ")
 
 	for _, v := range content {
 		file.WriteString(fmt.Sprintf("%s\n", v))

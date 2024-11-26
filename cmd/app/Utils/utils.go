@@ -28,7 +28,6 @@ func ClearConsole() {
 	if err != nil {
 		fmt.Println("Failed to clear console:", err)
 	}
-
 }
 
 func PressEnterToGoBack(msg string) {
