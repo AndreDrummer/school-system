@@ -11,21 +11,21 @@ type ClassRoom struct {
 	MinimumPassingGrade int
 }
 
-func (system *ClassRoom) AddStudent(newStudent *Student) bool {
+func (system *ClassRoom) AddStudent(newStudent *Student) (bool, error) {
 	system.Students[newStudent.ID] = newStudent
 	system.StudentsQty++
 
 	return db.Insert(*newStudent)
 }
 
-func (system *ClassRoom) AddGrade(studentID, grade int) bool {
+func (system *ClassRoom) AddGrade(studentID, grade int) (bool, error) {
 	student := system.Students[studentID]
 	student.AddGrade(grade)
 
 	return db.Update(studentID, *student)
 }
 
-func (system *ClassRoom) RemoveStudent(studentID int) bool {
+func (system *ClassRoom) RemoveStudent(studentID int) (bool, error) {
 	delete(system.Students, studentID)
 
 	return db.Delete(studentID)
@@ -51,6 +51,6 @@ func (system *ClassRoom) CheckPassOrFail(studentID int) bool {
 	return false
 }
 
-func (system *ClassRoom) ClearAll() bool {
+func (system *ClassRoom) ClearAll() (bool, error) {
 	return db.Clear()
 }

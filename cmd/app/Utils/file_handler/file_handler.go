@@ -10,15 +10,15 @@ import (
 	"strings"
 )
 
-func OpenFileWithPerm(filename string, flag int) *os.File {
+func OpenFileWithPerm(filename string, flag int) (*os.File, error) {
 	file, err := os.OpenFile(filename, flag, 0644)
 
 	if err != nil {
 		log.Fatalf("ERROR %v opening file %v", err, filename)
-		return nil
+		return nil, err
 	}
 
-	return file
+	return file, nil
 }
 
 func PrintFileContent(file *os.File) {

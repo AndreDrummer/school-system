@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"reflect"
@@ -21,47 +20,52 @@ func Init() {
 		errorCreatingFile := createDBFile(dbFilename)
 
 		if errorCreatingFile != nil {
-			log.Fatal(errorCreatingFile)
+			slog.Error(fmt.Sprintf("error %v initializing DB", errorCreatingFile.Error()))
+			return
 		}
 	}
 
 	file.Close()
 }
 
-func Insert(data interface{}) bool {
-	dbFile := file_handler.OpenFileWithPerm(dbFilename, os.O_APPEND|os.O_WRONLY)
+func Insert(data interface{}) (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_APPEND|os.O_WRONLY)
 
-	if dbFile != nil {
-		defer dbFile.Close()
-		dataString := convertStructToString(data)
-		file_handler.AppendToFile(dbFile, dataString)
-		return true
-	} else {
-		return false
+	if err != nil {
+		return false, err
 	}
+
+	defer dbFile.Close()
+	dataString := convertStructToString(data)
+	file_handler.AppendToFile(dbFile, dataString)
+
+	return true, nil
+
 }
 
-func Update(id int, data interface{}) bool {
-	dbFile := file_handler.OpenFileWithPerm(dbFilename, os.O_RDWR)
+func Update(id int, data interface{}) (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_RDWR)
 
-	if dbFile != nil {
-		defer dbFile.Close()
-		dataString := convertStructToString(data)
-		fmt.Println(data)
-		fmt.Println(dataString)
-		file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
-
-		return true
-	} else {
-		return false
+	if err != nil {
+		return false, err
 	}
+
+	defer dbFile.Close()
+	dataString := convertStructToString(data)
+	fmt.Println(data)
+	fmt.Println(dataString)
+	file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
+
+	return true, nil
+
 }
 
-func GetAll() []string {
+func GetAll() ([]string, error) {
 	dbFile, err := os.OpenFile(dbFilename, os.O_RDWR, 0644)
 
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		return []string{}, err
 	}
 
 	dbFileContent := file_handler.GetFileContent(dbFile)
@@ -69,45 +73,45 @@ func GetAll() []string {
 	// Remove any empty line that may exists.
 	file_handler.OverrideFileContent(dbFile, dbFileContent)
 
-	return dbFileContent
+	return dbFileContent, nil
 }
 
 func GetByID(id int) (string, error) {
-	dbFile := file_handler.OpenFileWithPerm(dbFilename, os.O_RDONLY)
+	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_RDONLY)
 
-	if dbFile != nil {
-		defer dbFile.Close()
-		content := file_handler.GetFileEntryByPrefix(dbFile, strconv.Itoa(id))
-		return content, nil
-	} else {
-		return "", fmt.Errorf("error trying get content of ID %v", id)
+	if err != nil {
+		return "", fmt.Errorf("error %v trying get content of ID %v", err, id)
 	}
+
+	defer dbFile.Close()
+	content := file_handler.GetFileEntryByPrefix(dbFile, strconv.Itoa(id))
+	return content, nil
 }
 
-func Delete(id int) bool {
-	dbFile := file_handler.OpenFileWithPerm(dbFilename, os.O_RDWR)
+func Delete(id int) (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_RDWR)
 
-	if dbFile != nil {
-		defer dbFile.Close()
-		file_handler.RemoveFileEntry(dbFile, strconv.Itoa(id))
-
-		return true
-	} else {
-		return false
+	if err != nil {
+		return false, err
 	}
+
+	defer dbFile.Close()
+	file_handler.RemoveFileEntry(dbFile, strconv.Itoa(id))
+
+	return true, nil
 }
 
-func Clear() bool {
-	dbFile := file_handler.OpenFileWithPerm(dbFilename, os.O_TRUNC)
+func Clear() (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_TRUNC)
 
-	if dbFile != nil {
-		defer dbFile.Close()
-
-		file_handler.ClearFileContent(dbFile)
-		return true
-	} else {
-		return false
+	if err != nil {
+		return false, err
 	}
+
+	defer dbFile.Close()
+
+	file_handler.ClearFileContent(dbFile)
+	return true, nil
 }
 
 func convertStructToString(s interface{}) string {

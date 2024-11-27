@@ -8,6 +8,6 @@ import (
 
 func main() {
 	db.Init()
-	schoolsystem.LoadStudentsFromDB()
+	schoolsystem.Init()
 	view.Run()
 }

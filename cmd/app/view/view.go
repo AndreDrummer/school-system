@@ -33,75 +33,99 @@ func AddStudent() {
 		}
 	}
 
+	studentID, err := getNextAvailableID()
+
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+
 	newStudent := &domain.Student{
-		ID:     getNextAvailableID(),
+		ID:     studentID,
 		Grades: make([]int, 0),
 		Name:   studentName,
 	}
 
-	if schoolsystem.Instance.AddStudent(newStudent) {
+	if ok, err := schoolsystem.AddStudent(newStudent); ok {
 		utils.ClearConsole()
 		utils.SetSuccessMsg(fmt.Sprintf("Student %v Added!", newStudent.Name))
+	} else {
+		slog.Error(err.Error())
 	}
 
 }
 
 func AddGrade() {
-	if areThereStudentsRegistered() {
+	if ok, err := areThereStudentsRegistered(); ok {
 		fmt.Print("What student would you like to add a grade?\n\n")
 		studentID := readStudentID()
 		student, studentExists := getStudentByID(studentID)
 
 		if studentExists {
 			grade := readGrade()
-
 			if grade >= 0 {
-				if schoolsystem.Instance.AddGrade(studentID, grade) {
+				if ok, err := schoolsystem.AddGrade(studentID, grade); ok {
 					utils.SetSuccessMsg(fmt.Sprintf("Grade %v added to %v!", grade, student.Name))
+				} else {
+					slog.Error(err.Error())
 				}
 			} else {
 				utils.ClearConsole()
 			}
 		}
 	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		if err != nil {
+			slog.Error(err.Error())
+		} else {
+			utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		}
 	}
 }
 
 func RemoveStudent() {
-	if areThereStudentsRegistered() {
+	if ok, err := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
-		student, studentExists := getStudentByID(studentID)
+		student, _ := getStudentByID(studentID)
 
-		if studentExists && schoolsystem.Instance.RemoveStudent(studentID) {
+		if ok, err := schoolsystem.RemoveStudent(studentID); ok {
 			utils.SetSuccessMsg(fmt.Sprintf("Student %v removed!", student.Name))
+		} else {
+			slog.Error(err.Error())
 		}
 	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		if err != nil {
+			slog.Error(err.Error())
+		} else {
+			utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		}
 	}
 }
 
 func CalculateAverage() {
-	if areThereStudentsRegistered() {
+	if ok, err := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
-		avg, err := schoolsystem.Instance.CalculateAverage(studentID)
+		avg, err := schoolsystem.CalculateAverage(studentID)
 
 		if err != nil {
 			slog.Error(err.Error())
 		} else {
-			student := schoolsystem.Instance.Students[studentID]
+			student, _ := schoolsystem.GetStudentByID(studentID)
 			utils.PressEnterToGoBack(fmt.Sprintf("\nThe average of %s is %v.\n", student.Name, avg))
 		}
 	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		if err != nil {
+			slog.Error(err.Error())
+		} else {
+			utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		}
 	}
 }
 
 func CheckPassOrFail() {
-	if areThereStudentsRegistered() {
+	if ok, err := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
 
-		approved := schoolsystem.Instance.CheckPassOrFail(studentID)
+		approved := schoolsystem.CheckPassOrFail(studentID)
 		var resultMsg string
 
 		if approved {
@@ -111,15 +135,19 @@ func CheckPassOrFail() {
 			resultMsg = "has failed :(!"
 		}
 
-		student := schoolsystem.Instance.Students[studentID]
+		student, _ := schoolsystem.GetStudentByID(studentID)
 		utils.PressEnterToGoBack(fmt.Sprintf("\n%s %v.\n", student.Name, resultMsg))
 
 	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		if err != nil {
+			slog.Error(err.Error())
+		} else {
+			utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		}
 	}
 }
 
-func DisplayAll(params *displayAllParams) {
+func DisplayAll(params *displayAllParams) error {
 	var msg string
 
 	if params == nil {
@@ -133,9 +161,13 @@ func DisplayAll(params *displayAllParams) {
 		msg = params.displayMsg
 	}
 
-	if areThereStudentsRegistered() {
+	if ok, err := areThereStudentsRegistered(); ok {
 		tempSliceToSort := make([]string, 0)
-		students := schoolsystem.Instance.Students
+		students, err := schoolsystem.AllStudents()
+
+		if err != nil {
+			return err
+		}
 
 		for _, v := range students {
 			var line string
@@ -163,14 +195,24 @@ func DisplayAll(params *displayAllParams) {
 		}
 
 	} else {
-		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		if err != nil {
+			slog.Error(err.Error())
+		} else {
+			utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		}
 	}
+
+	return nil
 }
 
 func Clear() {
 	answer := readYesOrNo("This will delete all data save in the database. Are you sure? ")
-	if answer && schoolsystem.Instance.ClearAll() {
-		utils.SetSuccessMsg("\n** Operação realizada com sucesso! **")
+	if answer {
+		if ok, err := schoolsystem.ClearAll(); ok {
+			utils.SetSuccessMsg("\n** Operação realizada com sucesso! **")
+		} else {
+			slog.Error(err.Error())
+		}
 	} else {
 		slog.Error("** Operação não realizada! **")
 	}
@@ -181,8 +223,14 @@ type displayAllParams struct {
 	readInput  interface{}
 }
 
-func areThereStudentsRegistered() bool {
-	return len(schoolsystem.Instance.Students) > 0
+func areThereStudentsRegistered() (bool, error) {
+	students, err := schoolsystem.AllStudents()
+
+	if err != nil {
+		return false, err
+	}
+
+	return len(students) > 0, nil
 }
 
 func readStudentID() int {
@@ -254,13 +302,17 @@ func readYesOrNo(msg string) bool {
 }
 
 func getStudentByID(studentID int) (*domain.Student, bool) {
-	student, exists := schoolsystem.Instance.Students[studentID]
+	student, exists := schoolsystem.GetStudentByID(studentID)
 	return student, exists
 }
 
-func getNextAvailableID() int {
+func getNextAvailableID() (int, error) {
 	studentIDs := make([]int, 0)
-	students := schoolsystem.Instance.Students
+	students, err := schoolsystem.AllStudents()
+
+	if err != nil {
+		return 0, err
+	}
 
 	for _, student := range students {
 		studentID := student.ID
@@ -274,9 +326,9 @@ func getNextAvailableID() int {
 			startID++
 			continue
 		} else {
-			return startID
+			return startID, nil
 		}
 	}
 
-	return len(studentIDs) + 1
+	return len(studentIDs) + 1, nil
 }

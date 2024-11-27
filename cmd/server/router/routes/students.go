@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"fmt"
+	"log/slog"
 	"net/http"
+	schoolsystem "school-system/cmd/app/controller"
 	httputils "school-system/cmd/server/http"
 
 	"github.com/go-chi/chi/v5"
@@ -18,11 +19,22 @@ func Students(r chi.Router) {
 
 var listAll = func(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	fmt.Println("Guenta que vai ta tudo ai..")
+
+	students, err := schoolsystem.AllStudents()
+
+	if err != nil {
+		slog.Error(err.Error())
+		httputils.SendResponse(
+			w,
+			httputils.Response{Error: "Could not get the students list."},
+			http.StatusInternalServerError,
+		)
+		return
+	}
 
 	httputils.SendResponse(
 		w,
-		httputils.Response{Data: "Guenta molekão.."},
+		httputils.Response{Data: students},
 		http.StatusOK,
 	)
 }

@@ -1,7 +1,9 @@
 package schoolsystem
 
 import (
+	"fmt"
 	"log"
+	"log/slog"
 	"school-system/cmd/app/db"
 	dbutils "school-system/cmd/app/db/utils"
 	"school-system/cmd/app/domain"
@@ -9,14 +11,33 @@ import (
 	"strings"
 )
 
-var Instance = &domain.ClassRoom{
+var instance = &domain.ClassRoom{
 	Students:            make(map[int]*domain.Student),
 	StudentsQty:         0,
 	MinimumPassingGrade: 60,
 }
 
-func GetAllStudents() []*domain.Student {
-	content := db.GetAll()
+func Init() {
+	students, err := AllStudents()
+
+	if err != nil {
+		slog.Error(fmt.Sprintf("error %v initializing system", err.Error()))
+		return
+	}
+
+	for _, student := range students {
+		instance.StudentsQty++
+		instance.Students[student.ID] = student
+	}
+}
+
+func AllStudents() ([]*domain.Student, error) {
+	content, err := db.GetAll()
+
+	if err != nil {
+		return []*domain.Student{}, err
+	}
+
 	list := make([]*domain.Student, len(content))
 
 	if len(content) > 0 {
@@ -42,14 +63,35 @@ func GetAllStudents() []*domain.Student {
 		}
 	}
 
-	return list
+	return list, nil
 }
 
-func LoadStudentsFromDB() {
-	students := GetAllStudents()
+func AddStudent(student *domain.Student) (bool, error) {
+	return instance.AddStudent(student)
+}
 
-	for _, student := range students {
-		Instance.StudentsQty++
-		Instance.Students[student.ID] = student
-	}
+func AddGrade(studentID, grade int) (bool, error) {
+	return instance.AddGrade(studentID, grade)
+}
+
+func RemoveStudent(studentID int) (bool, error) {
+	return instance.RemoveStudent(studentID)
+}
+
+func CalculateAverage(studentID int) (int, error) {
+	return instance.CalculateAverage(studentID)
+}
+
+func GetStudentByID(studentID int) (*domain.Student, bool) {
+	student, ok := instance.Students[studentID]
+
+	return student, ok
+}
+
+func CheckPassOrFail(studentID int) bool {
+	return instance.CheckPassOrFail(studentID)
+}
+
+func ClearAll() (bool, error) {
+	return instance.ClearAll()
 }
