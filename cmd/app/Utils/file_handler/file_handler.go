@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	utils "school-system/cmd/app/Utils"
+	utils "school-system/cmd/app/utils"
 
 	"strings"
 )

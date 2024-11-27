@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"reflect"
-	"school-system/cmd/app/Utils/file_handler"
+	"school-system/cmd/app/utils/file_handler"
 	"strconv"
 	"strings"
 )

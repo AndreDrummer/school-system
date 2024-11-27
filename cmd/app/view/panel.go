@@ -3,7 +3,7 @@ package view
 import (
 	"fmt"
 	"os"
-	utils "school-system/cmd/app/Utils"
+	utils "school-system/cmd/app/utils"
 
 	"time"
 )

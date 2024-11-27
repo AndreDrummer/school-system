@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	utils "school-system/cmd/app/Utils"
 	schoolsystem "school-system/cmd/app/controller"
 	"school-system/cmd/app/domain"
+	utils "school-system/cmd/app/utils"
 	"sort"
 	"strings"
 )
