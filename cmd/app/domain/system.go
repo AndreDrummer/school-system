@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"fmt"
+	"errors"
 	"school-system/cmd/app/db"
 )
 
@@ -38,7 +38,7 @@ func (system *ClassRoom) CalculateAverage(studentID int) (int, error) {
 		return student.GetAverage(), nil
 	}
 
-	return 0, fmt.Errorf("Student of ID %d does not exists", studentID)
+	return 0, errors.New("not found... searching on DB")
 }
 
 func (system *ClassRoom) CheckPassOrFail(studentID int) bool {

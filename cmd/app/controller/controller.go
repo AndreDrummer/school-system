@@ -79,13 +79,38 @@ func RemoveStudent(studentID int) (bool, error) {
 }
 
 func CalculateAverage(studentID int) (int, error) {
-	return instance.CalculateAverage(studentID)
+	avg, err := instance.CalculateAverage(studentID)
+
+	if err != nil {
+		student, ok := GetStudentByID(studentID)
+		if !ok {
+			return 0, err
+		}
+
+		avg = student.GetAverage()
+	}
+
+	return avg, nil
 }
 
 func GetStudentByID(studentID int) (*domain.Student, bool) {
 	student, ok := instance.Students[studentID]
 
-	return student, ok
+	if ok {
+		return student, ok
+	} else {
+		studentInfo, err := db.GetByID(studentID)
+		if err != nil {
+			return nil, false
+		}
+		studentName, grades := dbutils.GetStudentNameAndGrades(studentInfo)
+		student := &domain.Student{
+			ID:     studentID,
+			Grades: dbutils.ConvertGradesToIntSlice(grades),
+			Name:   studentName,
+		}
+		return student, true
+	}
 }
 
 func CheckPassOrFail(studentID int) bool {
