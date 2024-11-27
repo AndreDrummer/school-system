@@ -15,7 +15,7 @@ var dbFilename = "cmd/app/db/students.txt"
 
 // Fake DB: All is based on files
 func Init() {
-	_, errorReadingFile := os.Open(dbFilename)
+	file, errorReadingFile := os.Open(dbFilename)
 
 	if errorReadingFile != nil {
 		errorCreatingFile := createDBFile(dbFilename)
@@ -24,6 +24,8 @@ func Init() {
 			log.Fatal(errorCreatingFile)
 		}
 	}
+
+	file.Close()
 }
 
 func Insert(data interface{}) bool {
@@ -137,12 +139,14 @@ func convertStructToString(s interface{}) string {
 }
 
 func createDBFile(filename string) error {
-	_, err := os.OpenFile(filename, os.O_CREATE, 0644)
+	file, err := os.OpenFile(filename, os.O_CREATE, 0644)
 
 	if err != nil {
 		slog.Error(fmt.Sprintf("creating file %v\n", filename))
 		return err
 	}
+
+	file.Close()
 
 	return nil
 }

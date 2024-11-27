@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func ConvertGradesToInt(grades string) []int {
+func ConvertGradesToIntSlice(grades string) []int {
 	gradeStringSlice := strings.Fields(grades)
 	gradeIntSlice := make([]int, 0)
 

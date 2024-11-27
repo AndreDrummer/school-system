@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	utils "school-system/cmd/app/Utils"
-	"school-system/cmd/app/controller"
 
 	"time"
 )
@@ -41,19 +40,19 @@ func handleChoice(choice int) {
 		time.Sleep(750 * time.Millisecond)
 		os.Exit(0)
 	case 1:
-		controller.AddStudent()
+		AddStudent()
 	case 2:
-		controller.AddGrade()
+		AddGrade()
 	case 3:
-		controller.RemoveStudent()
+		RemoveStudent()
 	case 4:
-		controller.CalculateAverage()
+		CalculateAverage()
 	case 5:
-		controller.CheckPassOrFail()
+		CheckPassOrFail()
 	case 6:
-		controller.DisplayAll(nil)
+		DisplayAll(nil)
 	case 7:
-		controller.Clear()
+		Clear()
 	default:
 		fmt.Println("Invalid choice. Try again.")
 	}

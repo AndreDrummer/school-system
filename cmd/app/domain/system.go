@@ -1,37 +1,37 @@
-package models
+package domain
 
 import (
 	"fmt"
 	"school-system/cmd/app/db"
 )
 
-type System struct {
+type ClassRoom struct {
 	Students            map[int]*Student
 	StudentsQty         int
 	MinimumPassingGrade int
 }
 
-func (system *System) AddStudent(newStudent *Student) bool {
+func (system *ClassRoom) AddStudent(newStudent *Student) bool {
 	system.Students[newStudent.ID] = newStudent
 	system.StudentsQty++
 
 	return db.Insert(*newStudent)
 }
 
-func (system *System) AddGrade(studentID, grade int) bool {
+func (system *ClassRoom) AddGrade(studentID, grade int) bool {
 	student := system.Students[studentID]
 	student.AddGrade(grade)
 
 	return db.Update(studentID, *student)
 }
 
-func (system *System) RemoveStudent(studentID int) bool {
+func (system *ClassRoom) RemoveStudent(studentID int) bool {
 	delete(system.Students, studentID)
 
 	return db.Delete(studentID)
 }
 
-func (system *System) CalculateAverage(studentID int) (int, error) {
+func (system *ClassRoom) CalculateAverage(studentID int) (int, error) {
 	student, ok := system.Students[studentID]
 
 	if ok {
@@ -41,7 +41,7 @@ func (system *System) CalculateAverage(studentID int) (int, error) {
 	return 0, fmt.Errorf("Student of ID %d does not exists", studentID)
 }
 
-func (system *System) CheckPassOrFail(studentID int) bool {
+func (system *ClassRoom) CheckPassOrFail(studentID int) bool {
 	student, ok := system.Students[studentID]
 
 	if ok {
@@ -51,6 +51,6 @@ func (system *System) CheckPassOrFail(studentID int) bool {
 	return false
 }
 
-func (system *System) ClearAll() bool {
+func (system *ClassRoom) ClearAll() bool {
 	return db.Clear()
 }

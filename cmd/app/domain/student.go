@@ -1,4 +1,4 @@
-package models
+package domain
 
 type Student struct {
 	ID     int
