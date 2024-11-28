@@ -52,9 +52,12 @@ func Update(id int, data interface{}) (bool, error) {
 
 	defer dbFile.Close()
 	dataString := convertStructToString(data)
-	fmt.Println(data)
-	fmt.Println(dataString)
-	file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
+
+	err = file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
+
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 
@@ -84,7 +87,11 @@ func GetByID(id int) (string, error) {
 	}
 
 	defer dbFile.Close()
-	content := file_handler.GetFileEntryByPrefix(dbFile, strconv.Itoa(id))
+	content, err := file_handler.GetFileEntryByPrefix(dbFile, strconv.Itoa(id))
+	if err != nil {
+		return "", err
+	}
+
 	return content, nil
 }
 
@@ -127,7 +134,6 @@ func convertStructToString(s interface{}) string {
 		}
 
 		if value.CanConvert(reflect.TypeOf([]int{})) {
-			println("PODE")
 			convertedValue := value.Convert(reflect.TypeOf([]int{}))
 			result, ok := convertedValue.Interface().([]int)
 

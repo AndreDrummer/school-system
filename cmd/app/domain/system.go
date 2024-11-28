@@ -11,28 +11,32 @@ type ClassRoom struct {
 	MinimumPassingGrade int
 }
 
-func (system *ClassRoom) AddStudent(newStudent *Student) (bool, error) {
-	system.Students[newStudent.ID] = newStudent
-	system.StudentsQty++
+func (c *ClassRoom) AddStudent(newStudent *Student) (bool, error) {
+	c.Students[newStudent.ID] = newStudent
+	c.StudentsQty++
 
 	return db.Insert(*newStudent)
 }
 
-func (system *ClassRoom) AddGrade(studentID, grade int) (bool, error) {
-	student := system.Students[studentID]
+func (c *ClassRoom) AddGrade(studentID, grade int) (bool, error) {
+	student := c.Students[studentID]
 	student.AddGrade(grade)
 
 	return db.Update(studentID, *student)
 }
 
-func (system *ClassRoom) RemoveStudent(studentID int) (bool, error) {
-	delete(system.Students, studentID)
+func (c *ClassRoom) UpdateStudent(student *Student) (bool, error) {
+	return db.Update(student.ID, *student)
+}
+
+func (c *ClassRoom) RemoveStudent(studentID int) (bool, error) {
+	delete(c.Students, studentID)
 
 	return db.Delete(studentID)
 }
 
-func (system *ClassRoom) CalculateAverage(studentID int) (int, error) {
-	student, ok := system.Students[studentID]
+func (c *ClassRoom) CalculateAverage(studentID int) (int, error) {
+	student, ok := c.Students[studentID]
 
 	if ok {
 		return student.GetAverage(), nil
@@ -41,16 +45,16 @@ func (system *ClassRoom) CalculateAverage(studentID int) (int, error) {
 	return 0, errors.New("not found... searching on DB")
 }
 
-func (system *ClassRoom) CheckPassOrFail(studentID int) bool {
-	student, ok := system.Students[studentID]
+func (c *ClassRoom) CheckPassOrFail(studentID int) bool {
+	student, ok := c.Students[studentID]
 
 	if ok {
-		return student.GetAverage() > system.MinimumPassingGrade
+		return student.GetAverage() > c.MinimumPassingGrade
 	}
 
 	return false
 }
 
-func (system *ClassRoom) ClearAll() (bool, error) {
+func (c *ClassRoom) ClearAll() (bool, error) {
 	return db.Clear()
 }

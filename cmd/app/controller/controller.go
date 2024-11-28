@@ -74,6 +74,10 @@ func AddGrade(studentID, grade int) (bool, error) {
 	return instance.AddGrade(studentID, grade)
 }
 
+func UpdateStudent(student *domain.Student) (bool, error) {
+	return instance.UpdateStudent(student)
+}
+
 func RemoveStudent(studentID int) (bool, error) {
 	return instance.RemoveStudent(studentID)
 }

@@ -2,10 +2,12 @@ package file_handler
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	utils "school-system/cmd/app/utils"
+	apperrors "school-system/cmd/server/errors"
 
 	"strings"
 )
@@ -43,27 +45,29 @@ func GetFileContent(file *os.File) []string {
 	return content
 }
 
-func GetFileEntryByPrefix(file *os.File, prefix string) string {
+func GetFileEntryByPrefix(file *os.File, prefix string) (string, error) {
 	fileContent := GetFileContent(file)
 
 	for _, v := range fileContent {
 		vPrefix := strings.Split(v, " ")[0]
 		if vPrefix == prefix {
-			return v
+			return v, nil
 		}
 	}
 
-	return ""
+	return "", errors.New("entry not found")
 }
 
-func UpdateFileEntry(file *os.File, entryPrefix, updatedEntry string) {
+func UpdateFileEntry(file *os.File, entryPrefix, updatedEntry string) error {
 	fileContent := GetFileContent(file)
 	var newContent []string
+	var found bool
 
 	for _, v := range fileContent {
 
 		vPrefix := strings.Split(v, " ")[0]
 		if vPrefix == entryPrefix {
+			found = true
 			newContent = append(newContent, updatedEntry)
 		} else if v == "" {
 			continue
@@ -72,7 +76,12 @@ func UpdateFileEntry(file *os.File, entryPrefix, updatedEntry string) {
 		}
 	}
 
-	OverrideFileContent(file, newContent)
+	if found {
+		OverrideFileContent(file, newContent)
+		return nil
+	} else {
+		return &apperrors.NotFoundError{}
+	}
 }
 
 func RemoveFileEntry(file *os.File, entryPrefix any) {

@@ -1,9 +1,9 @@
 package domain
 
 type Student struct {
-	ID     int
-	Name   string
-	Grades []int
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Grades []int  `json:"grades"`
 }
 
 func (s *Student) AddGrade(grade int) {
