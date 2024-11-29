@@ -36,7 +36,8 @@ Creating a simple Student Management System using Go. The program will allow use
 
 6. **Extra**:
    - Communicate via API
-     - Make all the operations available to be made via REST.
+     - There is another project called [school-system-api](https://github.com/AndreDrummer/school-system-api) that is the server counterpart of this one. All the operations are available to be made via REST.
+   - Keep a local database to diminish the requests to the server.
 
 ---
 
