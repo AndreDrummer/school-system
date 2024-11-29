@@ -5,12 +5,12 @@ import (
 	"log/slog"
 	"os"
 	"reflect"
-	"school-system/cmd/app/utils/file_handler"
+	"school-system/cmd/server/db/file_handler"
 	"strconv"
 	"strings"
 )
 
-var dbFilename = "cmd/app/db/students.txt"
+var dbFilename = "cmd/server/db/students.txt"
 
 // Fake DB: All is based on files
 func Init() {

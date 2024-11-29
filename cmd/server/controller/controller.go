@@ -1,0 +1,126 @@
+package schoolsystem
+
+import (
+	"fmt"
+	"log"
+	"log/slog"
+	"school-system/cmd/server/db"
+	dbutils "school-system/cmd/server/db/utils"
+	"school-system/cmd/server/domain"
+	"strconv"
+	"strings"
+)
+
+var instance = &domain.ClassRoom{
+	Students:            make(map[int]*domain.Student),
+	StudentsQty:         0,
+	MinimumPassingGrade: 60,
+}
+
+func Init() {
+	students, err := AllStudents()
+
+	if err != nil {
+		slog.Error(fmt.Sprintf("error %v initializing system", err.Error()))
+		return
+	}
+
+	for _, student := range students {
+		instance.StudentsQty++
+		instance.Students[student.ID] = student
+	}
+}
+
+func AllStudents() ([]*domain.Student, error) {
+	content, err := db.GetAll()
+
+	if err != nil {
+		return []*domain.Student{}, err
+	}
+
+	list := make([]*domain.Student, len(content))
+
+	if len(content) > 0 {
+		for i, v := range content {
+			studentIDString := strings.Split(v, " ")[0]
+			studentID, err := strconv.Atoi(studentIDString)
+			if v == "" {
+				continue
+			}
+			studentName, grades := dbutils.GetStudentNameAndGrades(v)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			newStudent := &domain.Student{
+				ID:     studentID,
+				Grades: dbutils.ConvertGradesToIntSlice(grades),
+				Name:   studentName,
+			}
+
+			list[i] = newStudent
+		}
+	}
+
+	return list, nil
+}
+
+func AddStudent(student *domain.Student) (bool, error) {
+	return instance.AddStudent(student)
+}
+
+func AddGrade(studentID, grade int) (bool, error) {
+	return instance.AddGrade(studentID, grade)
+}
+
+func UpdateStudent(student *domain.Student) (bool, error) {
+	return instance.UpdateStudent(student)
+}
+
+func RemoveStudent(studentID int) (bool, error) {
+	return instance.RemoveStudent(studentID)
+}
+
+func CalculateAverage(studentID int) (int, error) {
+	avg, err := instance.CalculateAverage(studentID)
+
+	if err != nil {
+		student, ok := GetStudentByID(studentID)
+		if !ok {
+			return 0, err
+		}
+
+		avg = student.GetAverage()
+	}
+
+	return avg, nil
+}
+
+func GetStudentByID(studentID int) (*domain.Student, bool) {
+	student, ok := instance.Students[studentID]
+
+	if ok {
+		return student, ok
+	} else {
+		studentInfo, err := db.GetByID(studentID)
+		if err != nil {
+			return nil, false
+		}
+		studentName, grades := dbutils.GetStudentNameAndGrades(studentInfo)
+		student := &domain.Student{
+			ID:     studentID,
+			Grades: dbutils.ConvertGradesToIntSlice(grades),
+			Name:   studentName,
+		}
+		return student, true
+	}
+}
+
+func CheckPassOrFail(studentID int) bool {
+	return instance.CheckPassOrFail(studentID)
+}
+
+func ClearAll() (bool, error) {
+	return instance.ClearAll()
+}
