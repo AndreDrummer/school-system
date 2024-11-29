@@ -3,6 +3,7 @@ package view
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"os"
 	"school-system/cmd/controller"
 	"school-system/cmd/models"
@@ -19,14 +20,19 @@ type displayAllParams struct {
 	readInput  interface{}
 }
 
-func areThereStudentsRegistered() (bool, error) {
+func areThereStudentsRegistered() (bool, []models.Student, error) {
 	students, err := controller.AllStudents()
-
 	if err != nil {
-		return false, err
+		slog.Error(err.Error())
+		return false, students, err
 	}
 
-	return len(students) > 0, nil
+	if len(students) == 0 {
+		utils.PressEnterToGoBack("\n** Empty! No student registered.")
+		return false, students, nil
+	}
+
+	return len(students) > 0, students, nil
 }
 
 func readStudentID() int {

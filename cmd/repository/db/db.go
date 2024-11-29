@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"school-system/cmd/repository/db/file_handler"
 	dbutils "school-system/cmd/repository/db/utils"
+	"strings"
 
 	"strconv"
 )
@@ -67,6 +68,10 @@ func getDBFilepath() string {
 
 type DB struct{}
 
+type Document interface {
+	ToString() string
+}
+
 func GetDB() *DB {
 	if err := initDB(); err == nil {
 		return &DB{}
@@ -86,6 +91,21 @@ func (d *DB) Insert(data interface{}) (bool, error) {
 	defer dbFile.Close()
 	dataString := dbutils.ConvertStructToString(data)
 	file_handler.AppendToFile(dbFile, dataString)
+	return true, nil
+}
+
+func (d *DB) InsertAll(dataList []Document) (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_APPEND|os.O_WRONLY)
+	if err != nil {
+		return false, err
+	}
+	defer dbFile.Close()
+	var builder strings.Builder
+	for _, v := range dataList {
+		dataString := dbutils.ConvertStructToString(v)
+		builder.WriteString(fmt.Sprintf("%s\n", dataString))
+	}
+	file_handler.AppendToFile(dbFile, builder.String())
 	return true, nil
 }
 

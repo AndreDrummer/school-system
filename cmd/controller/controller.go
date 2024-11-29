@@ -1,6 +1,9 @@
 package controller
 
-import "school-system/cmd/models"
+import (
+	"school-system/cmd/models"
+	"school-system/cmd/repository"
+)
 
 var instance = &models.ClassRoom{
 	Students:            make(map[int]models.Student),
@@ -9,9 +12,7 @@ var instance = &models.ClassRoom{
 }
 
 func AllStudents() ([]models.Student, error) {
-	list := make([]models.Student, 0)
-
-	return list, nil
+	return repository.GetAllStudents()
 }
 
 func AddStudent(student models.Student) (bool, error) {

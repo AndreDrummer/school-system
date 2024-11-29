@@ -104,7 +104,7 @@ func AddStudent() {
 }
 
 func AddGrade() {
-	if ok, err := areThereStudentsRegistered(); ok {
+	if ok, _, _ := areThereStudentsRegistered(); ok {
 		fmt.Print("What student would you like to add a grade?\n\n")
 		studentID := readStudentID()
 		student, studentExists := getStudentByID(studentID)
@@ -121,17 +121,11 @@ func AddGrade() {
 				utils.ClearConsole()
 			}
 		}
-	} else {
-		if err != nil {
-			slog.Error(err.Error())
-		} else {
-			utils.PressEnterToGoBack("\n** Empty! No student registered.")
-		}
 	}
 }
 
 func RemoveStudent() {
-	if ok, err := areThereStudentsRegistered(); ok {
+	if ok, _, _ := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
 		student, _ := getStudentByID(studentID)
 
@@ -140,17 +134,11 @@ func RemoveStudent() {
 		} else {
 			slog.Error(err.Error())
 		}
-	} else {
-		if err != nil {
-			slog.Error(err.Error())
-		} else {
-			utils.PressEnterToGoBack("\n** Empty! No student registered.")
-		}
 	}
 }
 
 func CalculateAverage() {
-	if ok, err := areThereStudentsRegistered(); ok {
+	if ok, _, _ := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
 		avg, err := controller.CalculateAverage(studentID)
 
@@ -160,17 +148,12 @@ func CalculateAverage() {
 			student, _ := controller.GetStudentByID(studentID)
 			utils.PressEnterToGoBack(fmt.Sprintf("\nThe average of %s is %v.\n", student.Name, avg))
 		}
-	} else {
-		if err != nil {
-			slog.Error(err.Error())
-		} else {
-			utils.PressEnterToGoBack("\n** Empty! No student registered.")
-		}
 	}
 }
 
 func CheckPassOrFail() {
-	if ok, err := areThereStudentsRegistered(); ok {
+
+	if ok, _, _ := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
 
 		approved := controller.CheckPassOrFail(studentID)
@@ -186,12 +169,6 @@ func CheckPassOrFail() {
 		student, _ := controller.GetStudentByID(studentID)
 		utils.PressEnterToGoBack(fmt.Sprintf("\n%s %v.\n", student.Name, resultMsg))
 
-	} else {
-		if err != nil {
-			slog.Error(err.Error())
-		} else {
-			utils.PressEnterToGoBack("\n** Empty! No student registered.")
-		}
 	}
 }
 
@@ -209,9 +186,8 @@ func DisplayAll(params *displayAllParams) error {
 		msg = params.displayMsg
 	}
 
-	if ok, err := areThereStudentsRegistered(); ok {
+	if ok, students, err := areThereStudentsRegistered(); ok {
 		tempSliceToSort := make([]string, 0)
-		students, err := controller.AllStudents()
 
 		if err != nil {
 			return err
@@ -242,12 +218,6 @@ func DisplayAll(params *displayAllParams) error {
 			utils.PressEnterToGoBack("")
 		}
 
-	} else {
-		if err != nil {
-			slog.Error(err.Error())
-		} else {
-			utils.PressEnterToGoBack("\n** Empty! No student registered.")
-		}
 	}
 
 	return nil
