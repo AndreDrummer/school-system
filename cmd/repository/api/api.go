@@ -29,14 +29,14 @@ func GetAll() ([]models.Student, error) {
 	response, err := http.Get(url)
 
 	if err != nil {
-		slog.Error(fmt.Sprintf("Error making request: %s", err.Error()))
+		slog.Error(fmt.Sprintf("making request: %s", err.Error()))
 		return emptyStudentList, err
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		slog.Error(fmt.Sprintf("Error reading response: %s", err.Error()))
+		slog.Error(fmt.Sprintf("reading response: %s", err.Error()))
 		return emptyStudentList, err
 	}
 
