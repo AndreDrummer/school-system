@@ -4,8 +4,5 @@ APP_NAME=school-system
 
 default: run
 
-server:
-	@go run cmd/server/main.go
-
-app:
-	@go run cmd/app/main.go
+run:
+	@go run cmd/main.go

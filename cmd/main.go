@@ -1,8 +1,6 @@
 package main
 
-import (
-	"school-system/cmd/app/view"
-)
+import "school-system/cmd/view"
 
 func main() {
 	view.Display()

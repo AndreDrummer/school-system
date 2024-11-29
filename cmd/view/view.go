@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"school-system/cmd/app/controller"
-	"school-system/cmd/app/models"
-	utils "school-system/cmd/app/utils"
+	"school-system/cmd/controller"
+	"school-system/cmd/models"
+	"school-system/cmd/utils"
+
 	"sort"
 	"strings"
 )

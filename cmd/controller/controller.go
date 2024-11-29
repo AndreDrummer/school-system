@@ -1,8 +1,6 @@
 package controller
 
-import (
-	"school-system/cmd/app/models"
-)
+import "school-system/cmd/models"
 
 var instance = &models.ClassRoom{
 	Students:            make(map[int]models.Student),

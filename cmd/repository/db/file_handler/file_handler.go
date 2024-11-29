@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	utils "school-system/cmd/app/utils"
-	apperrors "school-system/cmd/server/errors"
+	apperrors "school-system/cmd/errors"
+	"school-system/cmd/utils"
 
 	"strings"
 )

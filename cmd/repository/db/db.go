@@ -6,8 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"school-system/cmd/server/db/file_handler"
-	dbutils "school-system/cmd/server/db/utils"
+	"school-system/cmd/repository/db/file_handler"
+	dbutils "school-system/cmd/repository/db/utils"
+
 	"strconv"
 )
 
