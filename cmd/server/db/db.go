@@ -4,149 +4,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"reflect"
+	"path/filepath"
+	"runtime"
 	"school-system/cmd/server/db/file_handler"
+	dbutils "school-system/cmd/server/db/utils"
 	"strconv"
-	"strings"
 )
-
-var dbFilename = "cmd/server/db/students.txt"
-
-// Fake DB: All is based on files
-func Init() {
-	file, errorReadingFile := os.Open(dbFilename)
-
-	if errorReadingFile != nil {
-		errorCreatingFile := createDBFile(dbFilename)
-
-		if errorCreatingFile != nil {
-			slog.Error(fmt.Sprintf("error %v initializing DB", errorCreatingFile.Error()))
-			return
-		}
-	}
-
-	file.Close()
-}
-
-func Insert(data interface{}) (bool, error) {
-	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_APPEND|os.O_WRONLY)
-
-	if err != nil {
-		return false, err
-	}
-
-	defer dbFile.Close()
-	dataString := convertStructToString(data)
-	file_handler.AppendToFile(dbFile, dataString)
-
-	return true, nil
-
-}
-
-func Update(id int, data interface{}) (bool, error) {
-	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_RDWR)
-
-	if err != nil {
-		return false, err
-	}
-
-	defer dbFile.Close()
-	dataString := convertStructToString(data)
-
-	err = file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
-
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-
-}
-
-func GetAll() ([]string, error) {
-	dbFile, err := os.OpenFile(dbFilename, os.O_RDWR, 0644)
-
-	if err != nil {
-		slog.Error(err.Error())
-		return []string{}, err
-	}
-
-	dbFileContent := file_handler.GetFileContent(dbFile)
-
-	// Remove any empty line that may exists.
-	file_handler.OverrideFileContent(dbFile, dbFileContent)
-
-	return dbFileContent, nil
-}
-
-func GetByID(id int) (string, error) {
-	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_RDONLY)
-
-	if err != nil {
-		return "", fmt.Errorf("error %v trying get content of ID %v", err, id)
-	}
-
-	defer dbFile.Close()
-	content, err := file_handler.GetFileEntryByPrefix(dbFile, strconv.Itoa(id))
-	if err != nil {
-		return "", err
-	}
-
-	return content, nil
-}
-
-func Delete(id int) (bool, error) {
-	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_RDWR)
-
-	if err != nil {
-		return false, err
-	}
-
-	defer dbFile.Close()
-	file_handler.RemoveFileEntry(dbFile, strconv.Itoa(id))
-
-	return true, nil
-}
-
-func Clear() (bool, error) {
-	dbFile, err := file_handler.OpenFileWithPerm(dbFilename, os.O_TRUNC)
-
-	if err != nil {
-		return false, err
-	}
-
-	defer dbFile.Close()
-
-	file_handler.ClearFileContent(dbFile)
-	return true, nil
-}
-
-func convertStructToString(s interface{}) string {
-	structValue := reflect.ValueOf(s)
-	structType := reflect.TypeOf(s)
-
-	var builder strings.Builder
-
-	for i := 0; i < structType.NumField(); i++ {
-		value := structValue.Field(i)
-		if value.CanInt() || value.CanConvert(reflect.TypeOf(string(""))) {
-			builder.WriteString(fmt.Sprintf("%v ", value))
-		}
-
-		if value.CanConvert(reflect.TypeOf([]int{})) {
-			convertedValue := value.Convert(reflect.TypeOf([]int{}))
-			result, ok := convertedValue.Interface().([]int)
-
-			if ok {
-				for _, v := range result {
-					builder.WriteString(fmt.Sprintf("%v ", strconv.Itoa(v)))
-				}
-			}
-		}
-	}
-
-	return builder.String()
-}
 
 func createDBFile(filename string) error {
 	file, err := os.OpenFile(filename, os.O_CREATE, 0644)
@@ -157,6 +20,129 @@ func createDBFile(filename string) error {
 	}
 
 	file.Close()
+	return nil
+}
+
+func initDB() error {
+	file, errorReadingFile := os.Open(getDBFilepath())
+
+	if errorReadingFile != nil {
+
+		errorCreatingFile := createDBFile(getDBFilepath())
+
+		if errorCreatingFile != nil {
+			slog.Error(fmt.Sprintf("error %v initializing DB", errorCreatingFile.Error()))
+			return errorCreatingFile
+		}
+	}
+	file.Close()
+	return nil
+}
+
+func getDBFileLocation() string {
+	dbfile := "/db.txt"
+
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		slog.Warn("Could not determine the DB file path location. Returning default.")
+		return "cmd/server/db" + dbfile
+	}
+	workDir := filepath.Dir(file)
+	dbFilename := workDir + dbfile
+
+	slog.Info("DB file located", "DBPath", dbFilename)
+	return dbFilename
+}
+
+var dbFilename string
+
+func getDBFilepath() string {
+	if dbFilename == "" {
+		dbFilename = getDBFileLocation()
+	}
+
+	return dbFilename
+}
+
+type DB struct{}
+
+func GetDB() *DB {
+	if err := initDB(); err == nil {
+		return &DB{}
+	}
 
 	return nil
+}
+
+var Instance = GetDB()
+
+// Fake DB: All is based on files
+func (d *DB) Insert(data interface{}) (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_APPEND|os.O_WRONLY)
+	if err != nil {
+		return false, err
+	}
+	defer dbFile.Close()
+	dataString := dbutils.ConvertStructToString(data)
+	file_handler.AppendToFile(dbFile, dataString)
+	return true, nil
+}
+
+func (d *DB) Update(id int, data interface{}) (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_RDWR)
+	if err != nil {
+		return false, err
+	}
+	defer dbFile.Close()
+	dataString := dbutils.ConvertStructToString(data)
+	err = file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (d *DB) GetAll() ([]string, error) {
+	dbFile, err := os.OpenFile(getDBFilepath(), os.O_RDWR, 0644)
+	if err != nil {
+		slog.Error(err.Error())
+		return []string{}, err
+	}
+	dbFileContent := file_handler.GetFileContent(dbFile)
+	// Remove any empty line that may exists.
+	file_handler.OverrideFileContent(dbFile, dbFileContent)
+	return dbFileContent, nil
+}
+
+func (d *DB) GetByID(id int) (string, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_RDONLY)
+	if err != nil {
+		return "", fmt.Errorf("error %v trying get content of ID %v", err, id)
+	}
+	defer dbFile.Close()
+	content, err := file_handler.GetFileEntryByPrefix(dbFile, strconv.Itoa(id))
+	if err != nil {
+		return "", err
+	}
+	return content, nil
+}
+
+func (d *DB) Delete(id int) (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_RDWR)
+	if err != nil {
+		return false, err
+	}
+	defer dbFile.Close()
+	file_handler.RemoveFileEntry(dbFile, strconv.Itoa(id))
+	return true, nil
+}
+
+func (d *DB) Clear() (bool, error) {
+	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_TRUNC)
+	if err != nil {
+		return false, err
+	}
+	defer dbFile.Close()
+	file_handler.ClearFileContent(dbFile)
+	return true, nil
 }

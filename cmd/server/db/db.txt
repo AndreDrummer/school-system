@@ -7,4 +7,4 @@
 7 Lucas 60 55 50 70  
 8 Beatriz 95 100 90 85  
 9 Carlos 45 50 40 55  
-10 Fernanda 90 80 70 100 
+10 Fernanda 10 80 70 100 

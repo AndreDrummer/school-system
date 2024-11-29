@@ -1,69 +1,24 @@
 package schoolsystem
 
 import (
-	"fmt"
-	"log"
-	"log/slog"
-	"school-system/cmd/server/db"
 	dbutils "school-system/cmd/server/db/utils"
 	"school-system/cmd/server/domain"
-	"strconv"
-	"strings"
 )
 
-var instance = &domain.ClassRoom{
-	Students:            make(map[int]*domain.Student),
-	StudentsQty:         0,
-	MinimumPassingGrade: 60,
-}
+var systemInstance *domain.ClassRoom
 
-func Init() {
-	students, err := AllStudents()
-
-	if err != nil {
-		slog.Error(fmt.Sprintf("error %v initializing system", err.Error()))
-		return
+func getInstance() *domain.ClassRoom {
+	if systemInstance == nil {
+		systemInstance = domain.NewClassRoom()
 	}
 
-	for _, student := range students {
-		instance.StudentsQty++
-		instance.Students[student.ID] = student
-	}
+	return systemInstance
 }
+
+var instance = getInstance()
 
 func AllStudents() ([]*domain.Student, error) {
-	content, err := db.GetAll()
-
-	if err != nil {
-		return []*domain.Student{}, err
-	}
-
-	list := make([]*domain.Student, len(content))
-
-	if len(content) > 0 {
-		for i, v := range content {
-			studentIDString := strings.Split(v, " ")[0]
-			studentID, err := strconv.Atoi(studentIDString)
-			if v == "" {
-				continue
-			}
-			studentName, grades := dbutils.GetStudentNameAndGrades(v)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			newStudent := &domain.Student{
-				ID:     studentID,
-				Grades: dbutils.ConvertGradesToIntSlice(grades),
-				Name:   studentName,
-			}
-
-			list[i] = newStudent
-		}
-	}
-
-	return list, nil
+	return instance.AllStudents()
 }
 
 func AddStudent(student *domain.Student) (bool, error) {
@@ -87,6 +42,7 @@ func CalculateAverage(studentID int) (int, error) {
 
 	if err != nil {
 		student, ok := GetStudentByID(studentID)
+
 		if !ok {
 			return 0, err
 		}
@@ -103,7 +59,7 @@ func GetStudentByID(studentID int) (*domain.Student, bool) {
 	if ok {
 		return student, ok
 	} else {
-		studentInfo, err := db.GetByID(studentID)
+		studentInfo, err := instance.GetStudentByID(studentID)
 		if err != nil {
 			return nil, false
 		}
