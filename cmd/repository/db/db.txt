@@ -1,0 +1,11 @@
+
+1 André Felipe 100 90 80 70 
+2 Ana 50 60 55 65 
+3 João 40 50 45 60 
+4 Maria 90 85 95 80 
+5 José 30 40 35 50 
+6 Clara 85 90 80 95 
+7 Lucas 60 55 50 70 
+8 Beatriz 95 100 90 85 
+9 Carlos 45 50 40 55 
+10 Fernanda 100 90 80 95 

@@ -64,3 +64,7 @@ func GetAllStudents() ([]models.Student, error) {
 		return list, nil
 	}
 }
+
+func AddStudent(student models.Student) (models.Student, error) {
+	return api.AddStudent(student)
+}

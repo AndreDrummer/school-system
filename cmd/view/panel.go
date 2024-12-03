@@ -82,15 +82,8 @@ func AddStudent() {
 		}
 	}
 
-	studentID, err := getNextAvailableID()
-
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
 	newStudent := &models.Student{
-		ID:     studentID,
+		ID:     0,
 		Grades: make([]int, 0),
 		Name:   studentName,
 	}

@@ -11,9 +11,6 @@ type ClassRoom struct {
 }
 
 func (c *ClassRoom) AddStudent(newStudent Student) (bool, error) {
-	c.Students[newStudent.ID] = newStudent
-	c.StudentsQty++
-
 	return false, nil
 }
 

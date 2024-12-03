@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -52,4 +53,52 @@ func GetAll() ([]models.Student, error) {
 	}
 
 	return students.Data, nil
+}
+func AddStudent(student models.Student) (models.Student, error) {
+	emptyStudent := models.Student{}
+
+	studentJson, err := json.Marshal(student)
+
+	if err != nil {
+		jsonEncondingError := &apperrors.JsonEncodingError{
+			Type: fmt.Sprintf("%T", student),
+			Err:  err,
+		}
+
+		slog.Error(jsonEncondingError.Error())
+		return emptyStudent, jsonEncondingError
+	}
+
+	url := baseURL + "/students"
+	response, err := http.Post(
+		url,
+		"application/json",
+		bytes.NewBuffer([]byte(studentJson)),
+	)
+
+	if err != nil {
+		slog.Error("adding new student")
+		return emptyStudent, err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+
+	if err != nil {
+		slog.Error("reading post response body")
+		return emptyStudent, err
+	}
+
+	var justCreatedStudent models.Student
+	err = json.Unmarshal(body, &justCreatedStudent)
+
+	if err != nil {
+		jsonDecodingError := &apperrors.JsonDecodingError{
+			Type: fmt.Sprintf("%T", justCreatedStudent),
+			Err:  err,
+		}
+		return emptyStudent, jsonDecodingError
+	}
+
+	return justCreatedStudent, nil
 }

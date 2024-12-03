@@ -9,7 +9,6 @@ import (
 	"school-system/cmd/models"
 	"school-system/cmd/utils"
 
-	"sort"
 	"strings"
 )
 
@@ -106,31 +105,4 @@ func readYesOrNo(msg string) bool {
 func getStudentByID(studentID int) (models.Student, bool) {
 	student, exists := controller.GetStudentByID(studentID)
 	return student, exists
-}
-
-func getNextAvailableID() (int, error) {
-	studentIDs := make([]int, 0)
-	students, err := controller.AllStudents()
-
-	if err != nil {
-		return 0, err
-	}
-
-	for _, student := range students {
-		studentID := student.ID
-		studentIDs = append(studentIDs, studentID)
-	}
-
-	sort.Ints(studentIDs)
-	startID := 1
-	for _, ID := range studentIDs {
-		if ID-startID == 0 {
-			startID++
-			continue
-		} else {
-			return startID, nil
-		}
-	}
-
-	return len(studentIDs) + 1, nil
 }
