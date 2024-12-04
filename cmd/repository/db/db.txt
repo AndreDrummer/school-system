@@ -6,6 +6,5 @@
 6 Clara 85 90 80 95 
 7 Lucas 60 55 50 70 
 8 Beatriz 95 100 90 85 
-9 Carlos 45 50 40 55 
-10 Fernanda 100 90 80 95
-12 Manoel Gomes 100 100 
+10 Fernanda 100 90 80 95 
+12 Manoel Gomes 100 100 60  

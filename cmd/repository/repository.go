@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
 	"school-system/cmd/models"
@@ -13,6 +14,10 @@ import (
 
 var dbInstance = db.GetDB()
 
+var connectionErrorMessage = func(err error) string {
+	return fmt.Sprintf("failed to connect to the server: %s.\n", err.Error())
+}
+
 func GetAllStudents() ([]models.Student, error) {
 	content, err := dbInstance.GetAll()
 
@@ -20,6 +25,7 @@ func GetAllStudents() ([]models.Student, error) {
 		students, err := api.GetAll()
 
 		if err != nil {
+			slog.Error(connectionErrorMessage(err))
 			return []models.Student{}, err
 		}
 
@@ -70,6 +76,7 @@ func AddStudent(student models.Student) (models.Student, error) {
 	emptyStudent := models.Student{}
 
 	if err != nil {
+		slog.Error(connectionErrorMessage(err))
 		return emptyStudent, err
 	}
 
@@ -86,6 +93,7 @@ func UpdateStudent(student models.Student) error {
 	err := api.UpdateStudent(student)
 
 	if err != nil {
+		slog.Error(connectionErrorMessage(err))
 		return err
 	}
 
@@ -96,8 +104,13 @@ func RemoveStudent(studentID int) error {
 	err := api.RemoveStudent(studentID)
 
 	if err != nil {
+		slog.Error(connectionErrorMessage(err))
 		return err
 	}
 
 	return dbInstance.Delete(studentID)
+}
+
+func ClearAll() error {
+	return dbInstance.Clear()
 }

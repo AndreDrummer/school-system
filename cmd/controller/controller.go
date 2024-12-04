@@ -52,31 +52,18 @@ func RemoveStudent(studentID int) error {
 	return repository.RemoveStudent(studentID)
 }
 
-func GetStudentByID(studentID int) (*models.Student, bool) {
-	student, ok := classRoomInstance.Students[studentID]
+func GetStudentByID(studentID int) *models.Student {
+	student := classRoomInstance.Students[studentID]
 
-	return student, ok
+	return student
 }
 
-func CalculateAverage(studentID int) (int, error) {
-	avg, err := classRoomInstance.CalculateAverage(studentID)
-
-	if err != nil {
-		student, ok := GetStudentByID(studentID)
-		if !ok {
-			return 0, err
-		}
-
-		avg = student.GetAverage()
-	}
-
-	return avg, nil
-}
-
-func CheckPassOrFail(studentID int) bool {
-	return classRoomInstance.CheckPassOrFail(studentID)
+func CheckPassOrFail(student models.Student) bool {
+	return classRoomInstance.CheckPassOrFail(student)
 }
 
 func ClearAll() error {
-	return classRoomInstance.ClearAll()
+	classRoomInstance.ClearAll()
+
+	return repository.ClearAll()
 }

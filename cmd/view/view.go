@@ -42,9 +42,9 @@ func readStudentID() int {
 			displayMsg: "\nEnter the student ID: ",
 			readInput:  &studentID,
 		})
-		_, exists := getStudentByID(studentID)
+		student := getStudentByID(studentID)
 
-		if exists {
+		if student != nil {
 			break
 		}
 
@@ -102,7 +102,7 @@ func readYesOrNo(msg string) bool {
 	return false
 }
 
-func getStudentByID(studentID int) (*models.Student, bool) {
-	student, exists := controller.GetStudentByID(studentID)
-	return student, exists
+func getStudentByID(studentID int) *models.Student {
+	student := controller.GetStudentByID(studentID)
+	return student
 }

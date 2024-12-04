@@ -100,9 +100,9 @@ func AddGrade() {
 	if ok, _, _ := areThereStudentsRegistered(); ok {
 		fmt.Print("What student would you like to add a grade?\n\n")
 		studentID := readStudentID()
-		student, studentExists := getStudentByID(studentID)
+		student := getStudentByID(studentID)
 
-		if studentExists {
+		if student != nil {
 			grade := readGrade()
 			if grade >= 0 {
 				if err := controller.AddGrade(student, grade); err == nil {
@@ -120,7 +120,7 @@ func AddGrade() {
 func RemoveStudent() {
 	if ok, _, _ := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
-		student, _ := getStudentByID(studentID)
+		student := getStudentByID(studentID)
 
 		if err := controller.RemoveStudent(studentID); err == nil {
 			utils.SetSuccessMsg(fmt.Sprintf("Student %v removed!", student.Name))
@@ -133,35 +133,37 @@ func RemoveStudent() {
 func CalculateAverage() {
 	if ok, _, _ := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
-		avg, err := controller.CalculateAverage(studentID)
+		student := controller.GetStudentByID(studentID)
 
-		if err != nil {
-			slog.Error(err.Error())
+		if student == nil {
+			slog.Error("Student not found")
 		} else {
-			student, _ := controller.GetStudentByID(studentID)
+			avg := student.GetAverage()
 			utils.PressEnterToGoBack(fmt.Sprintf("\nThe average of %s is %v.\n", student.Name, avg))
 		}
 	}
 }
 
 func CheckPassOrFail() {
-
 	if ok, _, _ := areThereStudentsRegistered(); ok {
 		studentID := readStudentID()
+		student := controller.GetStudentByID(studentID)
 
-		approved := controller.CheckPassOrFail(studentID)
-		var resultMsg string
-
-		if approved {
-			resultMsg = "has been approved! :)"
-
+		if student == nil {
+			slog.Error("Student not found")
 		} else {
-			resultMsg = "has failed :(!"
+			approved := controller.CheckPassOrFail(*student)
+			var resultMsg string
+
+			if approved {
+				resultMsg = "has been approved! :)"
+
+			} else {
+				resultMsg = "has failed :(!"
+			}
+
+			utils.PressEnterToGoBack(fmt.Sprintf("\n%s %v.\n", student.Name, resultMsg))
 		}
-
-		student, _ := controller.GetStudentByID(studentID)
-		utils.PressEnterToGoBack(fmt.Sprintf("\n%s %v.\n", student.Name, resultMsg))
-
 	}
 }
 

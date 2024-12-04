@@ -1,9 +1,5 @@
 package models
 
-import (
-	"errors"
-)
-
 type ClassRoom struct {
 	Students            map[int]*Student
 	StudentsQty         int
@@ -32,30 +28,16 @@ func (c *ClassRoom) AddStudent(newStudent Student) {
 	c.Students[newStudent.ID] = &newStudent
 }
 
+func (c *ClassRoom) CheckPassOrFail(student Student) bool {
+	return student.GetAverage() > c.MinimumPassingGrade
+}
+
 func (c *ClassRoom) RemoveStudent(studentID int) {
 	delete(c.Students, studentID)
 }
 
-func (c *ClassRoom) CalculateAverage(studentID int) (int, error) {
-	student, ok := c.Students[studentID]
-
-	if ok {
-		return student.GetAverage(), nil
+func (c *ClassRoom) ClearAll() {
+	for k := range c.Students {
+		delete(c.Students, k)
 	}
-
-	return 0, errors.New("not found")
-}
-
-func (c *ClassRoom) CheckPassOrFail(studentID int) bool {
-	student, ok := c.Students[studentID]
-
-	if ok {
-		return student.GetAverage() > c.MinimumPassingGrade
-	}
-
-	return false
-}
-
-func (c *ClassRoom) ClearAll() error {
-	return nil
 }
