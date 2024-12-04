@@ -83,21 +83,21 @@ func GetDB() *DB {
 var Instance = GetDB()
 
 // Fake DB: All is based on files
-func (d *DB) Insert(data interface{}) (bool, error) {
+func (d *DB) Insert(data interface{}) error {
 	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_APPEND|os.O_WRONLY)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer dbFile.Close()
 	dataString := dbutils.ConvertStructToString(data)
 	file_handler.AppendToFile(dbFile, dataString)
-	return true, nil
+	return nil
 }
 
-func (d *DB) InsertAll(dataList []Document) (bool, error) {
+func (d *DB) InsertAll(dataList []Document) error {
 	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_APPEND|os.O_WRONLY)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer dbFile.Close()
 	var builder strings.Builder
@@ -106,21 +106,21 @@ func (d *DB) InsertAll(dataList []Document) (bool, error) {
 		builder.WriteString(fmt.Sprintf("%s\n", dataString))
 	}
 	file_handler.AppendToFile(dbFile, builder.String())
-	return true, nil
+	return nil
 }
 
-func (d *DB) Update(id int, data interface{}) (bool, error) {
+func (d *DB) Update(id int, data interface{}) error {
 	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_RDWR)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer dbFile.Close()
 	dataString := dbutils.ConvertStructToString(data)
 	err = file_handler.UpdateFileEntry(dbFile, strconv.Itoa(id), dataString)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
 func (d *DB) GetAll() ([]string, error) {
@@ -148,22 +148,22 @@ func (d *DB) GetByID(id int) (string, error) {
 	return content, nil
 }
 
-func (d *DB) Delete(id int) (bool, error) {
+func (d *DB) Delete(id int) error {
 	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_RDWR)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer dbFile.Close()
 	file_handler.RemoveFileEntry(dbFile, strconv.Itoa(id))
-	return true, nil
+	return nil
 }
 
-func (d *DB) Clear() (bool, error) {
+func (d *DB) Clear() error {
 	dbFile, err := file_handler.OpenFileWithPerm(getDBFilepath(), os.O_TRUNC)
 	if err != nil {
-		return false, err
+		return err
 	}
 	defer dbFile.Close()
 	file_handler.ClearFileContent(dbFile)
-	return true, nil
+	return nil
 }

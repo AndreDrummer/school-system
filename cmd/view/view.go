@@ -102,7 +102,7 @@ func readYesOrNo(msg string) bool {
 	return false
 }
 
-func getStudentByID(studentID int) (models.Student, bool) {
+func getStudentByID(studentID int) (*models.Student, bool) {
 	student, exists := controller.GetStudentByID(studentID)
 	return student, exists
 }

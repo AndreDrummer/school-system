@@ -5,30 +5,35 @@ import (
 )
 
 type ClassRoom struct {
-	Students            map[int]Student
+	Students            map[int]*Student
 	StudentsQty         int
 	MinimumPassingGrade int
 }
 
-func (c *ClassRoom) AddStudent(newStudent Student) (bool, error) {
-	return false, nil
+func (c *ClassRoom) AllStudents() []Student {
+	studentsMap := c.Students
+	studentsList := make([]Student, 0)
+
+	for _, v := range studentsMap {
+		studentsList = append(studentsList, *v)
+	}
+
+	return studentsList
 }
 
-func (c *ClassRoom) AddGrade(studentID, grade int) (bool, error) {
-	student := c.Students[studentID]
-	student.AddGrade(grade)
-
-	return false, nil
+func (c *ClassRoom) AddAllStudents(students []Student) {
+	for _, student := range students {
+		c.AddStudent(student)
+	}
 }
 
-func (c *ClassRoom) UpdateStudent(student Student) (bool, error) {
-	return false, nil
+func (c *ClassRoom) AddStudent(newStudent Student) {
+	c.StudentsQty++
+	c.Students[newStudent.ID] = &newStudent
 }
 
-func (c *ClassRoom) RemoveStudent(studentID int) (bool, error) {
+func (c *ClassRoom) RemoveStudent(studentID int) {
 	delete(c.Students, studentID)
-
-	return false, nil
 }
 
 func (c *ClassRoom) CalculateAverage(studentID int) (int, error) {
@@ -38,7 +43,7 @@ func (c *ClassRoom) CalculateAverage(studentID int) (int, error) {
 		return student.GetAverage(), nil
 	}
 
-	return 0, errors.New("not found...")
+	return 0, errors.New("not found")
 }
 
 func (c *ClassRoom) CheckPassOrFail(studentID int) bool {
@@ -51,6 +56,6 @@ func (c *ClassRoom) CheckPassOrFail(studentID int) bool {
 	return false
 }
 
-func (c *ClassRoom) ClearAll() (bool, error) {
-	return false, nil
+func (c *ClassRoom) ClearAll() error {
+	return nil
 }

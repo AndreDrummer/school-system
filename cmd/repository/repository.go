@@ -28,7 +28,7 @@ func GetAllStudents() ([]models.Student, error) {
 			documents[i] = db.Document(v)
 		}
 
-		_, err = dbInstance.InsertAll(documents)
+		err = dbInstance.InsertAll(documents)
 
 		if err != nil {
 			slog.Warn("Was not possible cache list of students.")
@@ -66,5 +66,38 @@ func GetAllStudents() ([]models.Student, error) {
 }
 
 func AddStudent(student models.Student) (models.Student, error) {
-	return api.AddStudent(student)
+	newAddedStudent, err := api.AddStudent(student)
+	emptyStudent := models.Student{}
+
+	if err != nil {
+		return emptyStudent, err
+	}
+
+	err = dbInstance.Insert(newAddedStudent)
+
+	if err != nil {
+		return newAddedStudent, nil
+	}
+
+	return emptyStudent, err
+}
+
+func UpdateStudent(student models.Student) error {
+	err := api.UpdateStudent(student)
+
+	if err != nil {
+		return err
+	}
+
+	return dbInstance.Update(student.ID, student)
+}
+
+func RemoveStudent(studentID int) error {
+	err := api.RemoveStudent(studentID)
+
+	if err != nil {
+		return err
+	}
+
+	return dbInstance.Delete(studentID)
 }

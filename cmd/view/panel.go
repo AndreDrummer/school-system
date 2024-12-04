@@ -88,7 +88,7 @@ func AddStudent() {
 		Name:   studentName,
 	}
 
-	if ok, err := controller.AddStudent(*newStudent); ok {
+	if err := controller.AddStudent(*newStudent); err == nil {
 		utils.ClearConsole()
 		utils.SetSuccessMsg(fmt.Sprintf("Student %v Added!", newStudent.Name))
 	} else {
@@ -105,7 +105,7 @@ func AddGrade() {
 		if studentExists {
 			grade := readGrade()
 			if grade >= 0 {
-				if ok, err := controller.AddGrade(studentID, grade); ok {
+				if err := controller.AddGrade(student, grade); err == nil {
 					utils.SetSuccessMsg(fmt.Sprintf("Grade %v added to %v!", grade, student.Name))
 				} else {
 					slog.Error(err.Error())
@@ -122,7 +122,7 @@ func RemoveStudent() {
 		studentID := readStudentID()
 		student, _ := getStudentByID(studentID)
 
-		if ok, err := controller.RemoveStudent(studentID); ok {
+		if err := controller.RemoveStudent(studentID); err == nil {
 			utils.SetSuccessMsg(fmt.Sprintf("Student %v removed!", student.Name))
 		} else {
 			slog.Error(err.Error())
@@ -219,7 +219,7 @@ func DisplayAll(params *displayAllParams) error {
 func Clear() {
 	answer := readYesOrNo("This will delete all data save in the database. Are you sure? ")
 	if answer {
-		if ok, err := controller.ClearAll(); ok {
+		if err := controller.ClearAll(); err == nil {
 			utils.SetSuccessMsg("\n** Operação realizada com sucesso! **")
 		} else {
 			slog.Error(err.Error())

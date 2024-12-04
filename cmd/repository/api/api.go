@@ -23,6 +23,33 @@ type StudentResponse struct {
 	Data models.Student `json:"data"`
 }
 
+func doRequest(url, method string, body io.Reader) (*http.Response, error) {
+
+	newRequest, err := http.NewRequest(
+		method,
+		url,
+		body,
+	)
+
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, err
+	}
+
+	newRequest.Header.Set("Content-Type", "application/json")
+
+	clientHttp := &http.Client{}
+
+	response, err := clientHttp.Do(newRequest)
+
+	if err != nil {
+		slog.Error(err.Error())
+		return nil, err
+	}
+
+	return response, nil
+}
+
 func GetAll() ([]models.Student, error) {
 	url := baseURL + "/students"
 	emptyStudentList := []models.Student{}
@@ -54,6 +81,7 @@ func GetAll() ([]models.Student, error) {
 
 	return students.Data, nil
 }
+
 func AddStudent(student models.Student) (models.Student, error) {
 	emptyStudent := models.Student{}
 
@@ -89,7 +117,7 @@ func AddStudent(student models.Student) (models.Student, error) {
 		return emptyStudent, err
 	}
 
-	var justCreatedStudent models.Student
+	var justCreatedStudent StudentResponse
 	err = json.Unmarshal(body, &justCreatedStudent)
 
 	if err != nil {
@@ -100,5 +128,51 @@ func AddStudent(student models.Student) (models.Student, error) {
 		return emptyStudent, jsonDecodingError
 	}
 
-	return justCreatedStudent, nil
+	return justCreatedStudent.Data, nil
+}
+
+func UpdateStudent(student models.Student) error {
+	studentJson, err := json.Marshal(&student)
+
+	if err != nil {
+		jsonEncondingError := &apperrors.JsonEncodingError{
+			Type: fmt.Sprintf("%T", student),
+			Err:  err,
+		}
+		slog.Error(jsonEncondingError.Error())
+		return jsonEncondingError
+	}
+
+	studentID := student.ID
+
+	url := baseURL + fmt.Sprintf("/students/%d", studentID)
+	body := bytes.NewBuffer([]byte(studentJson))
+
+	response, err := doRequest(url, "PUT", body)
+
+	if err != nil {
+		slog.Error(err.Error())
+		return err
+	}
+
+	defer response.Body.Close()
+
+	slog.Info("Student updated successfully")
+	return nil
+}
+
+func RemoveStudent(studentID int) error {
+	url := baseURL + fmt.Sprintf("/students/%d", studentID)
+
+	response, err := doRequest(url, "DELETE", nil)
+
+	if err != nil {
+		slog.Error(err.Error())
+		return err
+	}
+
+	defer response.Body.Close()
+
+	slog.Info("Student deleted successfully")
+	return nil
 }
