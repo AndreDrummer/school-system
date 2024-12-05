@@ -1,0 +1,5 @@
+services:
+  schoolsystem:
+    image: asfsengineer/schoolsystem
+    ports:
+      - "8383:8383"

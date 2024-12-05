@@ -2,7 +2,10 @@
 
 APP_NAME=school-system
 
-default: run
+default: run-local
+
+run-local:
+	@go run cmd/main.go
 
 run:
-	@go run cmd/main.go
+	docker-compose up -d; go run cmd/main.go
