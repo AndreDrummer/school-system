@@ -1,5 +1,5 @@
-services:
-  schoolsystem:
-    image: asfsengineer/schoolsystem
+services:  
+  ssapi:
+    image: asfsengineer/ssapi
     ports:
-      - "8383:8383"
+      - "8383:8383"  
