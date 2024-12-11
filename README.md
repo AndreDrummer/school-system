@@ -2,7 +2,7 @@
 # School System
 
 [Server API](https://github.com/AndreDrummer/school-system-api)
-[Docker Image](https://hub.docker.com/r/asfsengineer/schoolsystem)
+[Docker Image](https://hub.docker.com/repository/docker/asfsengineer/ssapi)
 
 Creating a simple Student Management System using Go. The program will allow users to add students, remove students, and display a list of students, including their grades, average scores, and whether they passed or failed based on a minimum average.
 
